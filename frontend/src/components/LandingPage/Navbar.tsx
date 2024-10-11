@@ -1,10 +1,11 @@
 "use client";
-import { LogIn, Menu, Search, ShoppingCart, X } from "lucide-react";
+import { Menu, Search, ShoppingCart, X } from "lucide-react";
 import Image from "next/image";
 import { Button } from "../ui/button";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Login from "../User/Login";
+import AuthDialog from "../User/AuthDialog";
+import Link from "next/link";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -44,43 +45,12 @@ const Navbar = () => {
   const activeStyle =
     "text-black font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[3px] after:bg-[#FFAC4B] after:rounded-sm transition-all duration-300 ease-in-out";
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const item = menuItems.find(
-              (menuItem) => menuItem.ref.current === entry.target
-            );
-            if (item) {
-              setCurrentItem(item.name);
-            }
-          }
-        });
-      },
-      { threshold: 0.5 } // Cài đặt threshold để trigger khi 50% phần tử visible
-    );
-
-    // Quan sát từng phần tử trong menuItems
-    menuItems.forEach((menuItem) => {
-      if (menuItem.ref.current) {
-        observer.observe(menuItem.ref.current);
-      }
-    });
-
-    // Clean up observer khi component unmount
-    return () => {
-      menuItems.forEach((menuItem) => {
-        if (menuItem.ref.current) {
-          observer.unobserve(menuItem.ref.current);
-        }
-      });
-    };
-  }, []);
   return (
     <nav className="bg-[#fff9ef] relative">
       <div className="flex justify-between items-center p-4">
-        <Image src="/images/logo.svg" alt="logo" width={150} height={150} />
+        <Link href="/">
+          <Image src="/images/logo.svg" alt="logo" width={150} height={150} />
+        </Link>
         {/* Hamburger menu button */}
         <Button
           variant="ghost"
@@ -108,13 +78,15 @@ const Navbar = () => {
         </ul>
         {/* Desktop actions */}
         <div className="hidden md:flex gap-4 items-center">
-          <Search />
-          <ShoppingCart />
-          <Login />
-          {/* <Button className="mr-2 rounded-3xl bg-[#FFCB45] hover:bg-[#FFAC4B] text-black">
-            <LogIn className="mr-2 w-4 h-4" />
-            <span className="font-bold">Log in</span>
-          </Button> */}
+          <Button variant="link" size="icon">
+            <Search className="h-6 w-6" color="black" />
+          </Button>
+          <Button variant="link" size="icon">
+            <ShoppingCart className="h-6 w-6" color="black" />
+          </Button>
+          <div>
+            <AuthDialog />
+          </div>
         </div>
 
         {/* Mobile menu */}
@@ -161,10 +133,7 @@ const Navbar = () => {
                     <ShoppingCart className="h-5 w-5" />
                   </Button>
                 </div>
-                <Button className="w-full rounded-3xl bg-[#FFCB45] hover:bg-[#FFAC4B] text-black shadow-md">
-                  <LogIn className="mr-2 w-4 h-4" />
-                  <span className="font-bold">Log in</span>
-                </Button>
+                <AuthDialog />
               </motion.div>
             </motion.div>
           )}

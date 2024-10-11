@@ -10,6 +10,7 @@ import {
 import { HeartIcon, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 interface MenuItem {
   name: string;
@@ -163,12 +164,14 @@ export default function PopularMenu() {
           animate="visible"
         >
           <motion.div variants={itemVariants}>
-            <Button
-              className="font-bold text-lg rounded-full bg-[#FFCB45] hover:bg-[#FFAC4B] text-black px-8 py-6 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
-              size="lg"
-            >
-              More Menu
-            </Button>
+            <Link href="/menu">
+              <Button
+                className="font-bold text-lg rounded-full bg-[#FFCB45] hover:bg-[#FFAC4B] text-black px-8 py-6 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+                size="lg"
+              >
+                View All Menu
+              </Button>
+            </Link>
           </motion.div>
         </motion.div>
       </div>
