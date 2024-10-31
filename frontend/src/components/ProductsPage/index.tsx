@@ -115,16 +115,18 @@ export default function ProductsPage() {
       product.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .filter((product) =>
-      selectedCategory === "All" ? true : product.category === selectedCategory
+      selectedCategory === "All"
+        ? true
+        : product.category.includes(selectedCategory)
     )
     .filter(
       (product) =>
         product.price >= priceRange[0] && product.price <= priceRange[1]
     )
     .sort((a, b) => {
-      if (sortBy === "name") return a.name.localeCompare(b.name);
+      if (sortBy == "name") return a.name.localeCompare(b.name);
       if (sortBy === "price") return a.price - b.price;
-      return b.rating - a.rating;
+      return a.rating - b.rating;
     });
 
   const containerVariants = {

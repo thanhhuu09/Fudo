@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/LandingPage/Navbar";
-import Footer from "@/components/LandingPage/Footer";
+import ReduxProvider from "@/store/ReduxProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 // Load Inter font from Google
 const inter = Inter({
-  subsets: ["latin"], // Use the "latin" subset for better performance if you only need Latin characters
+  subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap", // Use font swap for better performance (optional)
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -29,9 +29,10 @@ export default function RootLayout({
          flex min-h-screen flex-col 
         `}
       >
-        <Navbar />
-        <main className="grow">{children}</main>
-        <Footer />
+        <ReduxProvider>
+          {children}
+          <Toaster />
+        </ReduxProvider>
       </body>
     </html>
   );

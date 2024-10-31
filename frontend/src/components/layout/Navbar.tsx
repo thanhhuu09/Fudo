@@ -1,4 +1,5 @@
 "use client";
+
 import { Menu, Search, ShoppingCart, X } from "lucide-react";
 import Image from "next/image";
 import { Button } from "../ui/button";
@@ -6,8 +7,13 @@ import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthDialog from "../User/AuthDialog";
 import Link from "next/link";
+import Cart from "../Cart";
+// import SearchDialog from "../SearchDialog";
+import NavbarAvatar from "../User/NavbarAvatar";
+import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
+  const { isAuthenticated, user, handleLogout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState<string>("Home");
   const menuItems = [
@@ -44,7 +50,6 @@ const Navbar = () => {
   ];
   const activeStyle =
     "text-black font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[3px] after:bg-[#FFAC4B] after:rounded-sm transition-all duration-300 ease-in-out";
-
   return (
     <nav className="bg-[#fff9ef] relative">
       <div className="flex justify-between items-center p-4">
@@ -53,9 +58,9 @@ const Navbar = () => {
         </Link>
         {/* Hamburger menu button */}
         <Button
+          className="md:hidden"
           variant="ghost"
           size="icon"
-          className="md:hidden z-50"
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -78,14 +83,15 @@ const Navbar = () => {
         </ul>
         {/* Desktop actions */}
         <div className="hidden md:flex gap-4 items-center">
-          <Button variant="link" size="icon">
-            <Search className="h-6 w-6" color="black" />
-          </Button>
-          <Button variant="link" size="icon">
-            <ShoppingCart className="h-6 w-6" color="black" />
-          </Button>
+          {/* <SearchDialog onSelectProduct={} products={} /> */}
+          <Cart />
+
           <div>
-            <AuthDialog />
+            {isAuthenticated && user ? (
+              <NavbarAvatar user={user} onLogout={handleLogout} />
+            ) : (
+              <AuthDialog />
+            )}
           </div>
         </div>
 

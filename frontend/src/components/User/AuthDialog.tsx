@@ -16,8 +16,17 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FcGoogle } from "react-icons/fc";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { useAppDispatch } from "@/store";
+import {
+  loginFailure,
+  loginStart,
+  loginSuccess,
+} from "@/store/slices/authSlice";
 
 const AuthDialog = () => {
+  const dispatch = useAppDispatch();
+
   const [open, setOpen] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [isShowPassword, setIsShowPassword] = useState(false);
@@ -26,24 +35,35 @@ const AuthDialog = () => {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
+  const handleSubmit = async () => {
+    try {
+      dispatch(loginStart());
+      if (isLogin) {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
 
-    if (isLogin) {
-      if (!email || !password) {
-        setError("Please fill in all fields.");
-        return;
+        if (res.ok) {
+          const data = await res.json();
+          dispatch(loginSuccess(data.user));
+          setOpen(false);
+          toast.success("Logged in successfully");
+        } else {
+          dispatch(loginFailure());
+          setError("Invalid email or password. Please try again.");
+        }
+      } else {
+        // Implement register logic here
+        console.log("Registering");
       }
-      // Here you would typically call your login API
-      console.log("Logging in with:", { email, password });
-    } else {
-      if (!name || !email || !password) {
-        setError("Please fill in all fields.");
-        return;
-      }
-      // Here you would typically call your registration API
-      console.log("Registering with:", { name, email, password });
+    } catch (error) {
+      dispatch(loginFailure());
+      console.error("Login failed:", error);
+      setError("Something went wrong. Please try again.");
     }
   };
 
@@ -101,7 +121,13 @@ const AuthDialog = () => {
               </span>
             </div>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+            className="space-y-4"
+          >
             {!isLogin && (
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
