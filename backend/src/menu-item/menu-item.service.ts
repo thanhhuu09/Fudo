@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { MenuItem } from './schemas/menu-item.schema';
 import { Model } from 'mongoose';
 import { CreateMenuItemDto } from './dto/create-menu-item.dto';
 import { CategoryService } from 'src/category/category.service';
 import { S3Service } from 'src/upload/s3.service';
+import { UpdateMenuItemDto } from './dto/update-menu-item.dto';
 
 @Injectable()
 export class MenuItemService {
@@ -18,7 +19,7 @@ export class MenuItemService {
     createMenuItemDto: CreateMenuItemDto,
   ): Promise<MenuItem> {
     const category = await this.categoryService.findOne(
-      createMenuItemDto.category,
+      createMenuItemDto.categoryID,
     );
     if (!category) {
       throw new Error('Category not found');
@@ -28,7 +29,7 @@ export class MenuItemService {
   }
 
   async findAll(): Promise<MenuItem[]> {
-    return this.menuItemModel.find().exec();
+    return this.menuItemModel.find().populate('categoryID', 'name');
   }
 
   async findOne(id: string): Promise<MenuItem> {
@@ -43,16 +44,24 @@ export class MenuItemService {
 
   async update(
     id: string,
-    updateMenuItemDto: CreateMenuItemDto,
+    updateMenuItemDto: UpdateMenuItemDto,
   ): Promise<MenuItem> {
     return this.menuItemModel.findByIdAndUpdate(id, updateMenuItemDto, {
       new: true,
     });
   }
 
-  async remove(id: string): Promise<any> {
-    return this.menuItemModel.deleteOne({
-      _id: id,
-    });
+  async remove(id: string): Promise<MenuItem> {
+    const deletedMenuItem = await this.menuItemModel.findByIdAndDelete(id);
+    if (!deletedMenuItem) {
+      throw new NotFoundException(`Menu item with ID ${id} not found`);
+    }
+    if (deletedMenuItem.imageURL) {
+      await this.s3Service.deleteFile(deletedMenuItem.imageURL);
+    } else {
+      throw new Error('Image URL not found');
+    }
+
+    return deletedMenuItem;
   }
 }

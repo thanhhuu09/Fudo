@@ -1,6 +1,8 @@
 import {
   Controller,
   Post,
+  Put,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -36,6 +38,28 @@ export class UploadController {
       throw new Error('File is required');
     }
     const imageUrl = await this.s3Service.uploadFile(file);
+    return { imageUrl };
+  }
+
+  // Update file
+  // Endpoint: PUT /upload?oldImageUrl=oldImageUrl
+  @Put()
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Update a file' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'File to be updated',
+    type: UploadFileDto,
+  })
+  @ApiResponse({ status: 200, description: 'File updated successfully' })
+  async updateFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Query('oldImageUrl') oldImageUrl: string,
+  ): Promise<{ imageUrl: string }> {
+    if (!file) {
+      throw new Error('File is required');
+    }
+    const imageUrl = await this.s3Service.updateFile(oldImageUrl, file);
     return { imageUrl };
   }
 }

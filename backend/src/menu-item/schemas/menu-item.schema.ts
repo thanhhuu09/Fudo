@@ -29,9 +29,9 @@ export class MenuItem extends Document {
   @Prop()
   inStock: boolean;
 
-  @ApiProperty({ description: 'Quality of the menu item' })
+  @ApiProperty({ description: 'Quantity of the menu item' })
   @Prop()
-  quality: string;
+  quantity: number;
 
   @ApiProperty({ description: 'Whether the menu item is visible' })
   @Prop()
@@ -43,7 +43,7 @@ export class MenuItem extends Document {
     ref: 'Category',
     required: true,
   })
-  category: Category | MongooseSchema.Types.ObjectId;
+  categoryID: Category | MongooseSchema.Types.ObjectId;
 }
 
 export const MenuItemSchema = SchemaFactory.createForClass(MenuItem);

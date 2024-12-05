@@ -24,8 +24,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ activeTab, notifications }) => {
   return (
-    <header className="bg-white shadow-sm z-10">
-      <div className="flex items-center justify-between p-4">
+    <header className="bg-white shadow-sm p-4">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Home className="h-5 w-5 text-gray-500" />
           <h2 className="text-lg font-semibold text-gray-800 capitalize">

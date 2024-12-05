@@ -4,6 +4,7 @@ export interface User {
   email: string;
   photo: string;
   password_hash: string;
+  role: string;
   addresses: string[];
   order_history: string[];
   account_status: string;
@@ -14,5 +15,15 @@ export interface User {
 
 export type UserProfile = Pick<
   User,
-  "name" | "email" | "photo" | "addresses" | "paymentMethods"
+  "name" | "email" | "photo" | "addresses" | "paymentMethods" | "role"
 >;
+
+export interface AuthResponse {
+  authenticated: boolean;
+  user: {
+    email: string;
+    sub: string;
+    iat: number;
+    exp: number;
+  };
+}

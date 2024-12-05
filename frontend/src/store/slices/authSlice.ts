@@ -1,9 +1,9 @@
-import { UserProfile } from "@/types";
+import { AuthResponse } from "@/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface AuthState {
   isAuthenticated: boolean;
-  user: UserProfile | null;
+  user: AuthResponse | null;
   isLoading: boolean;
 }
 
@@ -20,7 +20,7 @@ const authSlice = createSlice({
     loginStart: (state) => {
       state.isLoading = true;
     },
-    loginSuccess: (state, action: PayloadAction<UserProfile>) => {
+    loginSuccess: (state, action: PayloadAction<AuthResponse>) => {
       state.isAuthenticated = true;
       state.user = action.payload;
       state.isLoading = false;

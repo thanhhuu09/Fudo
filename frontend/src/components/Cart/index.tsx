@@ -10,55 +10,69 @@ import {
   SheetHeader,
   SheetTrigger,
 } from "../ui/sheet";
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import { useSelector } from "react-redux";
+import { RootState, useAppDispatch } from "@/store";
+import { decreaseQuantity, increaseQuantity } from "@/store/slices/cartSlice";
+import axios from "axios";
+import { setCart } from "../../store/slices/cartSlice";
 
-// Mocks cart items
-const initialCartItems = [
-  {
-    id: 1,
-    name: "Classic Burger",
-    price: 9.99,
-    category: "Burgers",
-    image: "/images/menu/classic-burger.png",
-    description:
-      "Juicy beef patty with fresh lettuce, tomato, and our special sauce",
-    rating: 4.5,
-    quantity: 1,
-  },
-  {
-    id: 2,
-    name: "Veggie Pizza",
-    price: 12.99,
-    category: "Pizza",
-    image: "/images/menu/veggie-pizza.png",
-    description:
-      "Loaded with fresh vegetables and our signature blend of cheeses",
-    rating: 4.8,
-    quantity: 2,
-  },
-];
 const Cart = () => {
+  const dispatch = useAppDispatch();
+  const { items, totalPrice } = useSelector((state: RootState) => state.cart);
+  const { user } = useSelector((state: RootState) => state.auth);
   const [isOpen, setIsOpen] = useState(false);
-  const [cartItems, setCartItems] = useState(initialCartItems);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const updateQuality = (id: number, change: number) => {
-    setCartItems((items) =>
-      items
-        .map((item) =>
-          item.id === id
-            ? { ...item, quantity: Math.max(0, item.quantity + change) }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
+  const updateQuality = (id: string, change: number) => {
+    if (change < 0) {
+      dispatch(decreaseQuantity(id.toString()));
+    } else {
+      dispatch(increaseQuantity(id.toString()));
+    }
   };
 
-  const totalPrice = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const fetchCart = async (userId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`/api/users/${userId}/cart`);
+      dispatch(setCart(response.data));
+    } catch (error) {
+      console.error("Failed to fetch cart:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCart(user?.user.sub as string);
+    }
+  }, [isOpen, dispatch]);
+
+  if (items.length === 0) {
+    return (
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            className="relative rounded-full bg-[#FFCB45] hover:bg-[#FFB800] text-black"
+          >
+            <ShoppingCart className="w-5 h-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent className="w-full sm:max-w-md">
+          <SheetHeader>Your Cart</SheetHeader>
+          <SheetDescription className="flex items-center justify-center h-full text-gray-500">
+            Your cart is empty
+          </SheetDescription>
+        </SheetContent>
+      </Sheet>
+    );
+  }
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -68,9 +82,9 @@ const Cart = () => {
           className="relative rounded-full bg-[#FFCB45] hover:bg-[#FFB800] text-black"
         >
           <ShoppingCart className="w-5 h-5" />
-          {cartItems.length > 0 && (
+          {items.length > 0 && (
             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-              {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+              {items.reduce((sum, item) => sum + item.quantity, 0)}
             </span>
           )}
         </Button>
@@ -82,7 +96,7 @@ const Cart = () => {
         </SheetDescription>
         <div className="mt-8 space-y-4">
           <AnimatePresence>
-            {cartItems.map((item) => (
+            {items.map((item) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -91,7 +105,7 @@ const Cart = () => {
                 className="flex items-center space-x-4 bg-white p-4 rounded-lg shadow"
               >
                 <Image
-                  src={item.image}
+                  src={item.imageURL}
                   alt={item.name}
                   className="rounded"
                   width={80}

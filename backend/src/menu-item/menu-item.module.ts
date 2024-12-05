@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MenuItem, MenuItemSchema } from './schemas/menu-item.schema';
 import { CategoryModule } from 'src/category/category.module';
 import { UploadModule } from 'src/upload/upload.module';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { UploadModule } from 'src/upload/upload.module';
     ]),
     CategoryModule,
     UploadModule,
+    UsersModule,
   ],
   providers: [MenuItemService],
   controllers: [MenuItemController],

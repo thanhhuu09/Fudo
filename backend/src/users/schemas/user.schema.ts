@@ -4,6 +4,9 @@ import { Document, Types } from 'mongoose';
 
 @Schema()
 export class User extends Document {
+  @Prop({ required: true, default: 'user', enum: ['user', 'admin'] })
+  role: string;
+
   @Prop({ required: true, unique: true })
   name: string;
 
@@ -27,6 +30,20 @@ export class User extends Document {
 
   @Prop({ type: [Types.ObjectId], ref: 'Order', default: [] })
   order_history: Types.ObjectId[];
+
+  @Prop({
+    type: [
+      {
+        menuItem: { type: Types.ObjectId, ref: 'MenuItem' },
+        quantity: { type: Number, required: true, default: 1 },
+      },
+    ],
+    default: [],
+  })
+  cart: {
+    menuItem: Types.ObjectId;
+    quantity: number;
+  }[];
 
   @Prop({ default: 'Active' })
   account_status: string;

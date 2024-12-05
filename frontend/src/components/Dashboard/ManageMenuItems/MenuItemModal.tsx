@@ -25,26 +25,16 @@ import {
 import Image from "next/image";
 import { toast } from "sonner";
 import axios from "axios";
-import { Category } from "@/types";
-
-interface MenuItem {
-  id?: string;
-  name: string;
-  description: string;
-  category: string;
-  price: number;
-  inStock: boolean;
-  quantity: number;
-  visible: boolean;
-  imageURL?: File | null;
-}
+import { Category, MenuItemForm, MenuItem } from "@/types";
+import { NumericFormat } from "react-number-format";
 
 interface MenuItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (item: MenuItem) => void;
+  onSave: (item: MenuItemForm) => void;
   initialData?: MenuItem;
   mode: "add" | "edit";
+  categories: Category[];
 }
 
 export default function MenuItemModal({
@@ -53,49 +43,30 @@ export default function MenuItemModal({
   onSave,
   initialData,
   mode,
+  categories,
 }: MenuItemModalProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
-
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<string>("");
-  const [price, setPrice] = useState("");
+  const [categoryID, setCategoryID] = useState<string>("");
+  const [price, setPrice] = useState<number>(0);
   const [inStock, setInStock] = useState(true);
-  const [quantity, setQuantity] = useState("");
+  const [quantity, setQuantity] = useState<number>(0);
   const [visible, setVisible] = useState(true);
   const [imageURL, setImageURL] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize form with existing data when editing
+  console.log("initialData", initialData);
   useEffect(() => {
-    if (mode === "edit" && initialData) {
+    if (initialData) {
       setName(initialData.name);
-      setDescription(initialData.description);
-      setCategory(initialData.category);
-      setPrice(initialData.price.toString());
+      setDescription(initialData.description || "");
+      setCategoryID(initialData.categoryID._id);
+      setPrice(initialData.price);
       setInStock(initialData.inStock);
-      setQuantity(initialData.quantity?.toString() || "");
+      setQuantity(initialData.quantity);
       setVisible(initialData.visible);
-      // Don't set image here as it might be a URL in edit mode
     }
-  }, [initialData, mode]);
-
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const response = await axios.get("/api/categories");
-        if (response.data.success) {
-          setCategories(response.data.data);
-        } else {
-          toast.error("Failed to fetch categories.");
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        toast.error("An error occurred. Please try again.");
-      }
-    }
-    fetchCategories();
-  }, []);
+  }, [initialData]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -115,52 +86,106 @@ export default function MenuItemModal({
   };
 
   const handleSave = async () => {
-    if (!name || !category || !price) {
+    if (!name || !categoryID || !price) {
       toast.error("Please fill in all required fields.");
       return;
     }
 
-    const formData = new FormData();
-    if (imageURL) {
-      formData.append("file", imageURL);
-    }
-    try {
-      const uploadResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/upload`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      const uploadResult = uploadResponse.data;
-      const imageUrl = uploadResult.imageUrl;
+    const data: MenuItemForm = {
+      name,
+      description,
+      categoryID,
+      price: price,
+      inStock,
+      quantity: inStock ? quantity : 0,
+      visible,
+      imageURL: initialData?.imageURL || "",
+    };
 
-      const data: MenuItem = {
-        name,
-        description,
-        category,
-        price: parseFloat(price),
-        inStock,
-        quantity: inStock ? parseInt(quantity) : 0,
-        visible,
-        imageURL: imageUrl,
-      };
-      const response = await axios.post("/api/menu-items", data, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.data.success) {
-        toast.success("Menu item created successfully.");
-        onSave(data);
-        resetForm();
+    try {
+      if (mode === "add") {
+        // Create new menu item
+        const response = await axios.post("/api/menu-items", data, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.data.success) {
+          // Handle image upload for new item
+          if (imageURL) {
+            const formData = new FormData();
+            formData.append("file", imageURL);
+            const uploadResponse = await axios.post(
+              `${process.env.NEXT_PUBLIC_API_URL}/upload`,
+              formData,
+              {
+                headers: {
+                  "Content-Type": "multipart/form-data",
+                },
+              }
+            );
+
+            const imageUrl = uploadResponse.data.imageUrl;
+
+            // Update the menu item with the image URL
+            await axios.put(`/api/menu-items/${response.data.data._id}`, {
+              imageURL: imageUrl,
+            });
+
+            toast.success("Menu item created successfully with image.");
+          } else {
+            toast.success("Menu item created successfully.");
+          }
+
+          onSave(response.data.data);
+        } else {
+          toast.error("Failed to create menu item.");
+        }
       } else {
-        toast.error("Failed to create menu item.");
+        // Update existing menu item
+        const updatedData = { ...data };
+
+        // Handle image update if there's a new image
+        if (imageURL instanceof File) {
+          const formData = new FormData();
+          formData.append("file", imageURL);
+          const uploadResponse = await axios.put(
+            `${process.env.NEXT_PUBLIC_API_URL}/upload?oldImageUrl=${initialData?.imageURL}`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+
+          updatedData.imageURL = uploadResponse.data.imageUrl;
+        }
+
+        // Update the menu item
+        const response = await axios.put(
+          `/api/menu-items/${initialData?._id}`,
+          updatedData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.data.success) {
+          toast.success("Menu item updated successfully.");
+          onSave(response.data.data);
+        } else {
+          toast.error("Failed to update menu item.");
+        }
       }
+
+      onClose();
+      resetForm();
     } catch (error) {
-      console.log("Error:", error);
+      console.error("Error:", error);
       toast.error("An error occurred. Please try again.");
     }
   };
@@ -168,10 +193,10 @@ export default function MenuItemModal({
   const resetForm = () => {
     setName("");
     setDescription("");
-    setCategory("");
-    setPrice("");
+    setCategoryID("");
+    setPrice(0);
     setInStock(true);
-    setQuantity("");
+    setQuantity(0);
     setVisible(true);
     setImageURL(null);
   };
@@ -186,7 +211,15 @@ export default function MenuItemModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          onClose();
+          resetForm();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
           <DialogTitle>
@@ -214,12 +247,12 @@ export default function MenuItemModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category *</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={categoryID} onValueChange={setCategoryID}>
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
+                  {categories?.map((cat) => (
                     <SelectItem key={cat._id} value={cat._id}>
                       {cat.name}
                     </SelectItem>
@@ -233,15 +266,15 @@ export default function MenuItemModal({
                 <span className="absolute left-3 top-1/2 -translate-y-1/2">
                   $
                 </span>
-                <Input
+                <NumericFormat
+                  customInput={Input}
                   id="price"
-                  type="number"
                   placeholder="0.00"
                   value={price}
-                  onChange={(e) => setPrice(e.target.value)}
+                  onValueChange={({ floatValue }) => setPrice(floatValue ?? 0)}
                   className="pl-7"
-                  min="0"
-                  step="0.01"
+                  allowNegative={false}
+                  thousandSeparator={true}
                   required
                 />
               </div>
@@ -257,13 +290,17 @@ export default function MenuItemModal({
             {inStock && (
               <div className="space-y-2">
                 <Label htmlFor="quantity">Quantity</Label>
-                <Input
+                <NumericFormat
+                  customInput={Input}
                   id="quantity"
-                  type="number"
                   placeholder="Enter available quantity"
                   value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  min="0"
+                  onValueChange={({ floatValue }) =>
+                    setQuantity(floatValue ?? 0)
+                  }
+                  allowNegative={false}
+                  decimalScale={0}
+                  required
                 />
               </div>
             )}

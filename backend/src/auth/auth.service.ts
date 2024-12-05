@@ -22,14 +22,14 @@ export class AuthService {
   ) {}
 
   async register(createdUser: CreateUserDto): Promise<User> {
-    const { name, email, hash_password } = createdUser;
+    const { name, email, password } = createdUser;
     const existingUser = await this.userModel.findOne({ email });
     if (existingUser) {
       throw new BadRequestException('User already exists');
     }
 
     const saltOrRounds = 10;
-    const hashedPassword = await bcrypt.hash(hash_password, saltOrRounds);
+    const hashedPassword = await bcrypt.hash(password, saltOrRounds);
     const newUser = new this.userModel({
       name,
       email,
@@ -59,7 +59,11 @@ export class AuthService {
     if (!userExists) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const payload = { email, sub: userExists._id };
+    const payload = {
+      email: userExists.email,
+      sub: userExists._id,
+      role: userExists.role,
+    };
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
       expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME'),

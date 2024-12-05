@@ -39,9 +39,9 @@ export class CreateMenuItemDto {
   @IsNumber()
   quantity?: number;
 
-  @ApiProperty({ description: 'Category of the menu item' })
+  @ApiProperty({ description: 'Category ID for the menu item' })
   @IsString()
-  category: string;
+  categoryID: string;
 
   @ApiProperty({
     description: 'Whether the item is visible on the menu',
