@@ -1,3 +1,7 @@
+export const config = {
+  runtime: "nodejs", // Use Node.js runtime instead of Edge runtime
+};
+
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -19,13 +23,12 @@ export async function GET(
     if (!response.ok) {
       throw new Error(`API returned status ${response.status}`);
     }
-
     const data = await response.json();
     return NextResponse.json(data, { status: 200 });
-  } catch (error: any) {
-    console.error("Error in Next.js API route:", error.message);
+  } catch (error) {
+    console.error("Error updating cart:", error);
     return NextResponse.json(
-      { success: false, message: error.message || "Server error" },
+      { success: false, message: "An error occurred while updating the cart" },
       { status: 500 }
     );
   }
