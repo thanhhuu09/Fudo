@@ -23,6 +23,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
+import { toast } from "sonner";
+import axios from "axios";
+import { Category } from "@/types";
 
 interface MenuItem {
   id?: string;
@@ -31,10 +34,9 @@ interface MenuItem {
   category: string;
   price: number;
   inStock: boolean;
-  quantity?: number;
+  quantity: number;
   visible: boolean;
-  image?: File | null;
-  imageUrl?: string;
+  imageURL?: File | null;
 }
 
 interface MenuItemModalProps {
@@ -52,14 +54,16 @@ export default function MenuItemModal({
   initialData,
   mode,
 }: MenuItemModalProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState<string>("");
   const [price, setPrice] = useState("");
   const [inStock, setInStock] = useState(true);
   const [quantity, setQuantity] = useState("");
   const [visible, setVisible] = useState(true);
-  const [image, setImage] = useState<File | null>(null);
+  const [imageURL, setImageURL] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize form with existing data when editing
@@ -76,9 +80,26 @@ export default function MenuItemModal({
     }
   }, [initialData, mode]);
 
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const response = await axios.get("/api/categories");
+        if (response.data.success) {
+          setCategories(response.data.data);
+        } else {
+          toast.error("Failed to fetch categories.");
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        toast.error("An error occurred. Please try again.");
+      }
+    }
+    fetchCategories();
+  }, []);
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setImage(e.target.files[0]);
+      setImageURL(e.target.files[0]);
     }
   };
 
@@ -89,25 +110,59 @@ export default function MenuItemModal({
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setImage(e.dataTransfer.files[0]);
+      setImageURL(e.dataTransfer.files[0]);
     }
   };
 
-  const handleSave = () => {
-    const menuItem: MenuItem = {
-      ...(initialData?.id && { id: initialData.id }), // Include ID if editing
-      name,
-      description,
-      category,
-      price: parseFloat(price),
-      inStock,
-      quantity: quantity ? parseInt(quantity) : undefined,
-      visible,
-      image: image || undefined,
-      imageUrl: initialData?.imageUrl,
-    };
-    onSave(menuItem);
-    resetForm();
+  const handleSave = async () => {
+    if (!name || !category || !price) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    const formData = new FormData();
+    if (imageURL) {
+      formData.append("file", imageURL);
+    }
+    try {
+      const uploadResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      const uploadResult = uploadResponse.data;
+      const imageUrl = uploadResult.imageUrl;
+
+      const data: MenuItem = {
+        name,
+        description,
+        category,
+        price: parseFloat(price),
+        inStock,
+        quantity: inStock ? parseInt(quantity) : 0,
+        visible,
+        imageURL: imageUrl,
+      };
+      const response = await axios.post("/api/menu-items", data, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.data.success) {
+        toast.success("Menu item created successfully.");
+        onSave(data);
+        resetForm();
+      } else {
+        toast.error("Failed to create menu item.");
+      }
+    } catch (error) {
+      console.log("Error:", error);
+      toast.error("An error occurred. Please try again.");
+    }
   };
 
   const resetForm = () => {
@@ -118,14 +173,14 @@ export default function MenuItemModal({
     setInStock(true);
     setQuantity("");
     setVisible(true);
-    setImage(null);
+    setImageURL(null);
   };
 
   const renderImage = () => {
-    if (image) {
-      return URL.createObjectURL(image);
-    } else if (initialData?.imageUrl) {
-      return initialData.imageUrl;
+    if (imageURL) {
+      return URL.createObjectURL(imageURL);
+    } else if (initialData?.imageURL) {
+      return initialData.imageURL;
     }
     return null;
   };
@@ -164,10 +219,11 @@ export default function MenuItemModal({
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="main">Main Dish</SelectItem>
-                  <SelectItem value="appetizer">Appetizer</SelectItem>
-                  <SelectItem value="dessert">Dessert</SelectItem>
-                  <SelectItem value="drink">Drink</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -238,7 +294,7 @@ export default function MenuItemModal({
                 {renderImage() ? (
                   <div className="relative">
                     <Image
-                      src={renderImage()!}
+                      src={renderImage() as string}
                       alt="Preview"
                       width={200}
                       height={150}
@@ -250,7 +306,7 @@ export default function MenuItemModal({
                       className="absolute top-0 right-0"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setImage(null);
+                        setImageURL(null);
                       }}
                     >
                       <Trash2 className="h-4 w-4" />

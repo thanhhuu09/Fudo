@@ -25,8 +25,8 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('API Documentation')
-    .setDescription('The API description')
+    .setTitle('Food Ordering API')
+    .setDescription('API documentation for the online food ordering system')
     .setVersion('1.0')
     .addBearerAuth()
     .addTag('nestjs')

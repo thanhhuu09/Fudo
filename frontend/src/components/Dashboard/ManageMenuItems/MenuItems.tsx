@@ -164,30 +164,24 @@ export default function MenuItemsManagement() {
       )
     );
   };
+  const handleAddItem = () => {};
 
-  const handleAddItem = () => {
-    // Add validation logic here
-    const newId = Math.max(...items.map((item) => item.id)) + 1;
-    setItems((prev) => [
-      ...prev,
-      {
-        ...newItem,
-        id: newId,
-        available: true,
-        stock: parseInt(newItem.stock),
-        price: parseFloat(newItem.price),
-      },
-    ]);
-    setIsAddItemModalOpen(false);
-    setNewItem({
-      name: "",
-      description: "",
-      category: "",
-      price: "",
-      stock: "",
-      image: "",
-    });
-  };
+  // const handleAddItem = () => {
+  //   // Add validation logic here
+  //   setItems((prev) => [
+  //     ...prev,
+  //     {
+  //       id: prev.length + 1,
+  //       name: newItem.name,
+  //       category: newItem.category,
+  //       price: parseFloat(newItem.price),
+  //       stock: parseInt(newItem.stock),
+  //       available: true,
+  //       image: newItem.image,
+  //     },
+  //   ]);
+  //   console.log("New item added:", newItem);
+  // };
 
   return (
     <div>
