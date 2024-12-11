@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import axios from "axios";
+import useAuthStore from "@/store/authStore";
 
 export default function DashboardLogin() {
   const [email, setEmail] = useState("");
@@ -29,6 +29,7 @@ export default function DashboardLogin() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const login = useAuthStore((state) => state.login);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,11 +37,7 @@ export default function DashboardLogin() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post("/api/auth/login", {
-        email,
-        password,
-      });
-
+      await login(email, password, rememberMe);
       router.push("/dashboard");
     } catch {
       setError("Invalid email or password. Please try again.");

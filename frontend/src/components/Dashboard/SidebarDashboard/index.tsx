@@ -22,7 +22,7 @@ import Link from "next/link";
 import ProfileDropdown from "./ProfileDropdown";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import useAuthStore from "@/store/authStore";
 
 interface SidebarDashboardItem {
   value: string;
@@ -72,9 +72,8 @@ const sidebarItems: SidebarDashboardItem[] = [
 
 const SidebarDashboard = () => {
   const pathname = usePathname();
-  const { isAuthenticated, user, handleLogout } = useAuth();
-  console.log({ user });
-
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b  p-4 bg-white">
@@ -127,13 +126,13 @@ const SidebarDashboard = () => {
         </SidebarGroupContent>
       </SidebarContent>
       <SidebarFooter className="border-t bg-white">
-        {isAuthenticated && user ? (
+        {user ? (
           <ProfileDropdown
             name={user.name}
             email={user.email}
             photo={user.photo}
             role={user.role}
-            onLogout={handleLogout}
+            onLogout={logout}
           />
         ) : null}
       </SidebarFooter>
