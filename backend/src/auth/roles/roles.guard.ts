@@ -6,39 +6,62 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from './roles.decorator';
-import { UsersService } from 'src/users/users.service';
-
+import { JwtService } from '@nestjs/jwt';
+import { Role } from 'src/common/enums/role.enum';
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
+    private jwtService: JwtService,
     private reflector: Reflector,
-    private readonly usersService: UsersService,
   ) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
-      ROLES_KEY,
-      [context.getHandler(), context.getClass()],
-    );
-    if (!requiredRoles) {
+    const isPublic = this.reflector.getAllAndOverride<boolean>('isPublic', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest();
-    const { user, params } = request;
 
-    console.log('User in request:', user);
-
-    if (!user) {
-      throw new UnauthorizedException('User not authenticated');
+    const authHeader = request.headers['authorization'];
+    if (!authHeader) {
+      throw new UnauthorizedException('Authorization header missing');
     }
 
-    const hasRole = requiredRoles.some((role) => user.role?.includes(role));
-    console.log(`User role "${user.role}" has access:`, hasRole);
-
-    if (!hasRole) {
-      throw new UnauthorizedException('User does not have access');
+    const token = authHeader.split(' ')[1]; // Bearer token
+    if (!token) {
+      throw new UnauthorizedException('Token missing');
     }
-    return true;
+
+    try {
+      const user = this.jwtService.verify(token);
+      request.user = user;
+
+      if (
+        requiredRoles &&
+        !requiredRoles.some((role) => user.roles?.includes(role))
+      ) {
+        throw new UnauthorizedException('Insufficient permissions');
+      }
+
+      // Check owner
+      const { id } = request.params;
+      if (user.roles.includes('user') && id !== user.sub) {
+        throw new UnauthorizedException(
+          'You can only access your own resources',
+        );
+      }
+      return true;
+    } catch (e) {
+      throw new UnauthorizedException('Invalid or expired token' + e);
+    }
   }
 }

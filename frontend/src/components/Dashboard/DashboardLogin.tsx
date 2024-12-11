@@ -20,16 +20,8 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import axios from "axios";
-import { useAppDispatch } from "@/store";
-import {
-  loginFailure,
-  loginStart,
-  loginSuccess,
-} from "@/store/slices/authSlice";
 
 export default function DashboardLogin() {
-  const dispatch = useAppDispatch();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -44,15 +36,13 @@ export default function DashboardLogin() {
     setIsLoading(true);
 
     try {
-      dispatch(loginStart());
       const res = await axios.post("/api/auth/login", {
         email,
         password,
       });
-      dispatch(loginSuccess(res.data.user));
+
       router.push("/dashboard");
     } catch {
-      dispatch(loginFailure());
       setError("Invalid email or password. Please try again.");
     } finally {
       setIsLoading(false);

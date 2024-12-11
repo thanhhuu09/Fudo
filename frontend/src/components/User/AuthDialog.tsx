@@ -17,53 +17,40 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FcGoogle } from "react-icons/fc";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { useAppDispatch } from "@/store";
-import {
-  loginFailure,
-  loginStart,
-  loginSuccess,
-} from "@/store/slices/authSlice";
+import useAuthStore from "@/store/authStore";
 
 const AuthDialog = () => {
-  const dispatch = useAppDispatch();
-
   const [open, setOpen] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [isShowPassword, setIsShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
+  const login = useAuthStore((state) => state.login);
   const handleSubmit = async () => {
-    try {
-      dispatch(loginStart());
-      if (isLogin) {
-        const res = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        });
+    if (!email || !password) {
+      setError("Email and password are required");
+      return;
+    }
 
-        if (res.ok) {
-          const data = await res.json();
-          dispatch(loginSuccess(data.user));
-          setOpen(false);
-          toast.success("Logged in successfully");
-        } else {
-          dispatch(loginFailure());
-          setError("Invalid email or password. Please try again.");
-        }
-      } else {
-        // Implement register logic here
-        console.log("Registering");
+    if (!isLogin && !name) {
+      setError("Name is required");
+      return;
+    }
+
+    if (isLogin) {
+      try {
+        await login(email, password, rememberMe);
+        toast.success("Login successful");
+      } catch (error) {
+        console.error("Login failed", error);
       }
-    } catch (error) {
-      dispatch(loginFailure());
-      console.error("Login failed:", error);
-      setError("Something went wrong. Please try again.");
+    } else {
+      // Implement registration logic here
+      console.log("Registering");
     }
   };
 
@@ -172,6 +159,17 @@ const AuthDialog = () => {
                   {isShowPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </Button>
               </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div>
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={() => setRememberMe(!rememberMe)}
+                />
+              </div>
+              <Label htmlFor="rememberMe">Remember me</Label>
             </div>
             {error && (
               <Alert variant="destructive">

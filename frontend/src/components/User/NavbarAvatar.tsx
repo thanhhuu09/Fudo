@@ -13,15 +13,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserProfile } from "@/types";
+import { User as UserT } from "@/types";
+import useAuthStore from "@/store/authStore";
 
 interface NavbarAvatarProps {
-  user: UserProfile;
-  onLogout: () => void;
+  user: UserT;
 }
 
-export default function NavbarAvatar({ user, onLogout }: NavbarAvatarProps) {
+export default function NavbarAvatar({ user }: NavbarAvatarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const logout = useAuthStore((state) => state.logout);
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -66,7 +67,7 @@ export default function NavbarAvatar({ user, onLogout }: NavbarAvatarProps) {
           className="cursor-pointer text-red-600 focus:text-red-600"
           onSelect={() => {
             setIsOpen(false);
-            onLogout();
+            logout();
           }}
         >
           <LogOut className="mr-2 h-4 w-4" />

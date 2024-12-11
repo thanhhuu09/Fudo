@@ -1,13 +1,14 @@
 // users/schemas/user.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { Role } from 'src/common/enums/role.enum';
 
 @Schema()
 export class User extends Document {
-  @Prop({ required: true, default: 'user', enum: ['user', 'admin'] })
+  @Prop({ required: true, default: Role.User, enum: Role })
   role: string;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   name: string;
 
   @Prop({ required: true, unique: true })
@@ -17,7 +18,7 @@ export class User extends Document {
   photo: string;
 
   @Prop({ required: true })
-  password_hash: string;
+  passwordHash: string;
 
   @Prop({ default: [] })
   addresses: string[];
@@ -29,7 +30,7 @@ export class User extends Document {
   }[];
 
   @Prop({ type: [Types.ObjectId], ref: 'Order', default: [] })
-  order_history: Types.ObjectId[];
+  orderHistory: Types.ObjectId[];
 
   @Prop({
     type: [
@@ -46,7 +47,10 @@ export class User extends Document {
   }[];
 
   @Prop({ default: 'Active' })
-  account_status: string;
+  accountStatus: string;
+
+  @Prop({ default: '' })
+  refreshToken: string;
 
   @Prop({ default: Date.now })
   createdAt: Date;

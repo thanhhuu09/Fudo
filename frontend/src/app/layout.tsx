@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import ReduxProvider from "@/store/ReduxProvider";
 import { Toaster } from "@/components/ui/sonner";
+import AuthProvider from "@/store/AuthProvider";
 
 // Load Inter font from Google
 const inter = Inter({
@@ -29,10 +29,8 @@ export default function RootLayout({
          flex min-h-screen flex-col 
         `}
       >
-        <ReduxProvider>
-          {children}
-          <Toaster />
-        </ReduxProvider>
+        <AuthProvider>{children}</AuthProvider>
+        <Toaster />
       </body>
     </html>
   );

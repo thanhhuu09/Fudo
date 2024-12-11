@@ -10,13 +10,11 @@ import Link from "next/link";
 import Cart from "../Cart";
 // import SearchDialog from "../SearchDialog";
 import NavbarAvatar from "../User/NavbarAvatar";
-import { useAuth } from "@/hooks/useAuth";
 import { usePathname } from "next/navigation";
+import useAuthStore from "@/store/authStore";
 
 const Navbar = () => {
   const pathname = usePathname();
-
-  const { isAuthenticated, user, handleLogout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState<string>("Home");
   const menuItems = [
@@ -53,6 +51,9 @@ const Navbar = () => {
   ];
   const activeStyle =
     "text-black font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[3px] after:bg-[#FFAC4B] after:rounded-sm transition-all duration-300 ease-in-out";
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const user = useAuthStore((state) => state.user);
+
   return (
     <nav className="bg-[#fff9ef] relative">
       <div className="flex justify-between items-center p-4">
@@ -90,15 +91,15 @@ const Navbar = () => {
         {/* Desktop actions */}
         <div className="hidden md:flex gap-4 items-center">
           {/* <SearchDialog onSelectProduct={} products={} /> */}
-          <Cart />
 
-          <div>
-            {isAuthenticated && user ? (
-              <NavbarAvatar user={user} onLogout={handleLogout} />
-            ) : (
-              <AuthDialog />
-            )}
-          </div>
+          {accessToken && user ? (
+            <div className="flex items-center gap-4">
+              <Cart />
+              <NavbarAvatar user={user} />
+            </div>
+          ) : (
+            <AuthDialog />
+          )}
         </div>
 
         {/* Mobile menu */}

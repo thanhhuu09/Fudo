@@ -10,48 +10,41 @@ import {
   SheetHeader,
   SheetTrigger,
 } from "../ui/sheet";
-import { use, useEffect, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useSelector } from "react-redux";
-import { RootState, useAppDispatch } from "@/store";
-import { decreaseQuantity, increaseQuantity } from "@/store/slices/cartSlice";
-import axios from "axios";
-import { setCart } from "../../store/slices/cartSlice";
+import { formatNumber } from "@/lib/formatNumber";
+import { useCartStore } from "@/store/cartStore";
 
 const Cart = () => {
-  const dispatch = useAppDispatch();
-  const { items, totalPrice } = useSelector((state: RootState) => state.cart);
-  const { user } = useSelector((state: RootState) => state.auth);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const updateQuality = (id: string, change: number) => {
-    if (change < 0) {
-      dispatch(decreaseQuantity(id.toString()));
-    } else {
-      dispatch(increaseQuantity(id.toString()));
-    }
-  };
+  const items = useCartStore((state) => state.items);
 
-  const fetchCart = async (userId: string) => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get(`/api/users/${userId}/cart`);
-      dispatch(setCart(response.data));
-    } catch (error) {
-      console.error("Failed to fetch cart:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateQuality = useCartStore((state) => state.updateItems);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchCart(user?.user.sub as string);
-    }
-  }, [isOpen, dispatch]);
-
+  if (isLoading) {
+    return (
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            className="relative rounded-full bg-[#FFCB45] hover:bg-[#FFB800] text-black"
+          >
+            <ShoppingCart className="w-5 h-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent className="w-full sm:max-w-md">
+          <SheetHeader>Your Cart</SheetHeader>
+          <SheetDescription className="flex items-center justify-center h-full text-gray-500">
+            Loading...
+          </SheetDescription>
+        </SheetContent>
+      </Sheet>
+    );
+  }
   if (items.length === 0) {
     return (
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -98,24 +91,24 @@ const Cart = () => {
           <AnimatePresence>
             {items.map((item) => (
               <motion.div
-                key={item.id}
+                key={item._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 className="flex items-center space-x-4 bg-white p-4 rounded-lg shadow"
               >
                 <Image
-                  src={item.imageURL}
-                  alt={item.name}
+                  src={item.menuItem.imageURL}
+                  alt={item.menuItem.name}
                   className="rounded"
                   width={80}
                   height={80}
                   objectFit="cover"
                 />
                 <div className="flex-grow">
-                  <h3 className="font-semibold">{item.name}</h3>
+                  <h3 className="font-semibold">{item.menuItem.name}</h3>
                   <p className="text-sm text-gray-500">
-                    ${item.price.toFixed(2)}
+                    ${formatNumber(item.menuItem.price)}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -123,7 +116,7 @@ const Cart = () => {
                     variant="outline"
                     size="icon"
                     className="h-8 w-8 rounded-full"
-                    onClick={() => updateQuality(item.id, -1)}
+                    onClick={() => updateQuality(item._id, -1)}
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
@@ -132,7 +125,7 @@ const Cart = () => {
                     variant="outline"
                     size="icon"
                     className="h-8 w-8 rounded-full"
-                    onClick={() => updateQuality(item.id, 1)}
+                    onClick={() => updateQuality(item._id, 1)}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -146,7 +139,13 @@ const Cart = () => {
             <div className="flex justify-between items-center">
               <span className="font-semibold">Total:</span>
               <span className="font-bold text-lg">
-                ${totalPrice.toFixed(2)}
+                $
+                {formatNumber(
+                  items.reduce(
+                    (sum, item) => sum + item.menuItem.price * item.quantity,
+                    0
+                  )
+                )}
               </span>
             </div>
             <Button className="w-full bg-[#FFCB45] hover:bg-[#FFB800] text-black">

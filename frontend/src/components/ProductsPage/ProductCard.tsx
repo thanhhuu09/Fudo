@@ -3,18 +3,18 @@ import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
 import { MenuItem } from "@/types";
 import { Button } from "../ui/button";
 import { HeartIcon, ShoppingCart } from "lucide-react";
-import { RootState, useAppDispatch } from "@/store";
-import { addToCart } from "@/store/slices/cartSlice";
 import { toast } from "sonner";
 import axios from "axios";
-import { useSelector } from "react-redux";
 
 const ProductCard = ({ product }: { product: MenuItem }) => {
-  const { user } = useSelector((state: RootState) => state.auth);
   console.log({ user });
+  console.log({ product });
 
-  const dispatch = useAppDispatch();
   const handleAddToCart = async (userId: string) => {
+    if (!user) {
+      toast.error("Please login to add to cart");
+      return;
+    }
     const response = await axios.put(
       `/api/users/${userId}/cart`,
       {
@@ -27,13 +27,11 @@ const ProductCard = ({ product }: { product: MenuItem }) => {
         },
       }
     );
-    console.log({ response });
-
-    if (response.status === 200) {
-      dispatch(addToCart(response.data));
+    const data = response.data;
+    if (data) {
       toast.success("Added to cart");
     } else {
-      toast.error("Failed to add to cart");
+      toast.error(data.message);
     }
   };
 

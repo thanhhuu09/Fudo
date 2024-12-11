@@ -3,14 +3,11 @@ export interface User {
   name: string;
   email: string;
   photo: string;
-  password_hash: string;
   role: string;
   addresses: string[];
-  order_history: string[];
-  account_status: string;
+  orderHistory: string[];
+  accountStatus: string;
   paymentMethods: string[];
-  createdAt: Date;
-  __v: number;
 }
 
 export type UserProfile = Pick<

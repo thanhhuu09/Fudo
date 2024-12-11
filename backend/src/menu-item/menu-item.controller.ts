@@ -8,7 +8,6 @@ import {
   Query,
   Put,
   Delete,
-  UseGuards,
 } from '@nestjs/common';
 import { MenuItemService } from './menu-item.service';
 import { CreateMenuItemDto } from './dto/create-menu-item.dto';
@@ -25,8 +24,8 @@ import { MenuItem } from './schemas/menu-item.schema';
 import { S3Service } from 'src/upload/s3.service';
 import { UpdateMenuItemDto } from './dto/update-menu-item.dto';
 import { Roles } from 'src/auth/roles/roles.decorator';
-import { RolesGuard } from 'src/auth/roles/roles.guard';
-import { AuthGuard } from '@nestjs/passport';
+import { Public } from 'src/auth/roles/public.decorator';
+import { Role } from 'src/common/enums/role.enum';
 
 @ApiTags('MenuItems')
 @Controller('menu-items')
@@ -37,8 +36,7 @@ export class MenuItemController {
   ) {}
 
   @Post()
-  @Roles('admin') // Gắn metadata roles với giá trị là ['admin']
-  @UseGuards(AuthGuard('jwt'), RolesGuard) // Protect the route with JWT authentication and RolesGuard
+  @Roles(Role.Admin)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Create a new menu item',
@@ -66,6 +64,7 @@ export class MenuItemController {
   }
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'Get menu items by category' })
   @ApiQuery({
     name: 'category',
@@ -80,6 +79,7 @@ export class MenuItemController {
   }
 
   @Get(':id')
+  @Public()
   @ApiOperation({ summary: 'Get a menu item by ID' })
   @ApiParam({ name: 'id', description: 'ID of the menu item to retrieve' })
   @ApiResponse({
@@ -93,6 +93,8 @@ export class MenuItemController {
   }
 
   @Put(':id')
+  @Roles(Role.Admin)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a menu item' })
   @ApiParam({ name: 'id', description: 'ID of the menu item to update' })
   @ApiBody({ type: CreateMenuItemDto })
@@ -110,6 +112,8 @@ export class MenuItemController {
   }
 
   @Delete(':id')
+  @Roles(Role.Admin)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a menu item' })
   @ApiParam({ name: 'id', description: 'ID of the menu item to delete' })
   @ApiResponse({
