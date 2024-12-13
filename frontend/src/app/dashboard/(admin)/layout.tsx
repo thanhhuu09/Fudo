@@ -7,17 +7,17 @@ export default function Layout({
 }: Readonly<{ children: React.ReactNode }>) {
   const notifications = [
     {
-      id: 1,
+      id: "1",
       title: "New order",
       time: "2 hours ago",
     },
     {
-      id: 2,
+      id: "2",
       title: "New order",
       time: "2 hours ago",
     },
     {
-      id: 3,
+      id: "3",
       title: "New order",
       time: "2 hours ago",
     },

@@ -52,6 +52,7 @@ const Cart = () => {
 
   useEffect(() => {
     fetchCartData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   if (isLoading) {

@@ -72,9 +72,9 @@ const RecentOrders: React.FC = () => {
                   <Badge
                     variant={
                       order.status === "Delivered"
-                        ? "success"
+                        ? "default"
                         : order.status === "Preparing"
-                        ? "warning"
+                        ? "secondary"
                         : "default"
                     }
                   >
