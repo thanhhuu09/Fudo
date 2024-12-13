@@ -4,35 +4,29 @@ import { MenuItem } from "@/types";
 import { Button } from "../ui/button";
 import { HeartIcon, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
-import axios from "axios";
+import useAuthStore from "@/store/authStore";
+import { useCartStore } from "@/store/cartStore";
 
 const ProductCard = ({ product }: { product: MenuItem }) => {
-  console.log({ user });
-  console.log({ product });
+  const user = useAuthStore((state) => state.user);
+  const addToCart = useCartStore((state) => state.addItem);
+  const items = useCartStore((state) => state.items);
 
   const handleAddToCart = async (userId: string) => {
     if (!user) {
       toast.error("Please login to add to cart");
       return;
     }
-    const response = await axios.put(
-      `/api/users/${userId}/cart`,
-      {
-        menuItemId: product._id,
-        quantity: 1,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    const data = response.data;
-    if (data) {
+    const currentQuantity = items.find(
+      (item) => item.menuItem._id === product._id
+    )?.quantity;
+    if (currentQuantity) {
+      await addToCart(userId, product._id, currentQuantity + 1);
       toast.success("Added to cart");
-    } else {
-      toast.error(data.message);
+      return;
     }
+    addToCart(userId, product._id, 1);
+    toast.success("Added to cart");
   };
 
   return (
@@ -65,7 +59,7 @@ const ProductCard = ({ product }: { product: MenuItem }) => {
             variant="ghost"
             size="icon"
             className="rounded-full"
-            onClick={() => handleAddToCart(user?.user.sub as string)}
+            onClick={() => handleAddToCart(user?._id as string)}
           >
             <ShoppingCart className="w-5 h-5 text-gray-400 hover:text-[#FF9F29] transition-colors" />
           </Button>

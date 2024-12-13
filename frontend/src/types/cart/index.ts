@@ -1,7 +1,9 @@
+import { MenuItem } from "../menu-item";
+
 export interface CartItem {
-  _id: string;
-  name: string;
-  price: number;
-  imageURL: string;
+  menuItem: MenuItem;
   quantity: number;
+  _id: string;
 }
+
+export type CartResponse = CartItem[];

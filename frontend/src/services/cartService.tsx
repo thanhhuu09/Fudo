@@ -1,104 +1,47 @@
+import { CartResponse } from "@/types/cart";
+import axios from "axios";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export const fetchCart = async (userId: string, token: string) => {
+export const fetchCart = async (
+  userId: string,
+  accessToken: string
+): Promise<CartResponse> => {
   try {
-    const response = await fetch(`${API_URL}/users/${userId}/cart`, {
-      method: "GET",
+    const response = await axios.get(`${API_URL}/users/${userId}/cart`, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch cart data");
-    }
-
-    return await response.json();
+    return response.data;
   } catch (error) {
     console.error("Error fetching cart:", error);
     throw error;
   }
 };
 
-export const addCartItem = async (
+export const updateCart = async (
   userId: string,
-  cartItem: { menuItem: string; quantity: number },
-  token: string
+  accessToken: string,
+  menuItemId: string,
+  quantity: number
 ) => {
   try {
-    const response = await fetch(`${API_URL}/users/${userId}/cart`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(cartItem),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to add cart item");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error adding cart item:", error);
-    throw error;
-  }
-};
-
-export const updateCartItem = async (
-  userId: string,
-  cartItemId: string,
-  quantity: number,
-  token: string
-) => {
-  try {
-    const response = await fetch(
-      `${API_URL}/users/${userId}/cart/${cartItemId}`,
+    const payload = {
+      menuItemId,
+      quantity,
+    };
+    const response = await axios.put(
+      `${API_URL}/users/${userId}/cart`,
+      payload,
       {
-        method: "PATCH",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ quantity }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to update cart item");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error updating cart item:", error);
-    throw error;
-  }
-};
-
-export const deleteCartItem = async (
-  userId: string,
-  cartItemId: string,
-  token: string
-) => {
-  try {
-    const response = await fetch(
-      `${API_URL}/users/${userId}/cart/${cartItemId}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
-
-    if (!response.ok) {
-      throw new Error("Failed to delete cart item");
-    }
-
-    return await response.json();
+    return response.data;
   } catch (error) {
-    console.error("Error deleting cart item:", error);
+    console.error("Error updating cart:", error);
     throw error;
   }
 };

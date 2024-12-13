@@ -53,8 +53,9 @@ export class RolesGuard implements CanActivate {
       }
 
       // Check owner
-      const { id } = request.params;
-      if (user.roles.includes('user') && id !== user.sub) {
+      const { userId } = request.params;
+
+      if (user.roles.includes('user') && userId !== user.sub) {
         throw new UnauthorizedException(
           'You can only access your own resources',
         );

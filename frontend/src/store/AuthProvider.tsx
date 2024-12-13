@@ -1,7 +1,8 @@
-"use client"; // This file explicitly enables client-side logic
+"use client";
 
 import { useEffect } from "react";
 import useAuthStore from "./authStore";
+import LoadingUI from "@/components/LoadingUI";
 
 interface Props {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ export default function AuthProvider({ children }: Props) {
   }, [initializeAuth]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <LoadingUI />;
   }
 
   return <>{children}</>;

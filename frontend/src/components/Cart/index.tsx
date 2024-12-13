@@ -10,19 +10,49 @@ import {
   SheetHeader,
   SheetTrigger,
 } from "../ui/sheet";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { formatNumber } from "@/lib/formatNumber";
 import { useCartStore } from "@/store/cartStore";
+import useAuthStore from "@/store/authStore";
+import { toast } from "sonner";
 
 const Cart = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  const user = useAuthStore((state) => state.user);
   const items = useCartStore((state) => state.items);
+  const updateQuality = useCartStore((state) => state.addItem);
+  const fetchCarts = useCartStore((state) => state.fetchCarts);
 
-  const updateQuality = useCartStore((state) => state.updateItems);
+  console.log({ items });
+
+  const handleUpdateQuality = async (menuItemId: string, quantity: number) => {
+    if (!user) {
+      toast.error("Please login to add to cart");
+      return;
+    }
+    console.log({ menuItemId, quantity });
+
+    try {
+      await updateQuality(user._id, menuItemId, quantity);
+      toast.success("Cart updated");
+    } catch (error) {
+      console.error("Failed to update cart", error);
+      toast.error("Failed to update cart");
+    }
+  };
+  const fetchCartData = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    await fetchCarts(user._id);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchCartData();
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -44,8 +74,7 @@ const Cart = () => {
         </SheetContent>
       </Sheet>
     );
-  }
-  if (items.length === 0) {
+  } else if (items.length === 0) {
     return (
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
@@ -66,6 +95,7 @@ const Cart = () => {
       </Sheet>
     );
   }
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -116,7 +146,9 @@ const Cart = () => {
                     variant="outline"
                     size="icon"
                     className="h-8 w-8 rounded-full"
-                    onClick={() => updateQuality(item._id, -1)}
+                    onClick={() =>
+                      handleUpdateQuality(item.menuItem._id, item.quantity - 1)
+                    }
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
@@ -125,7 +157,9 @@ const Cart = () => {
                     variant="outline"
                     size="icon"
                     className="h-8 w-8 rounded-full"
-                    onClick={() => updateQuality(item._id, 1)}
+                    onClick={() =>
+                      handleUpdateQuality(item.menuItem._id, item.quantity + 1)
+                    }
                   >
                     <Plus className="h-4 w-4" />
                   </Button>

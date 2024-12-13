@@ -1,5 +1,5 @@
 // users/dto/update-cart.dto.ts
-import { IsMongoId, IsNumber } from 'class-validator';
+import { IsInt, IsMongoId, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateCartDto {
@@ -8,6 +8,7 @@ export class UpdateCartDto {
   menuItemId: string;
 
   @ApiProperty({ description: 'The quantity of the menu item' })
-  @IsNumber()
+  @Min(0)
+  @IsInt()
   quantity: number;
 }

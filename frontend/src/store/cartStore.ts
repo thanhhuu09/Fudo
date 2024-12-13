@@ -1,35 +1,35 @@
-import { MenuItem } from "@/types";
+import { fetchCart, updateCart } from "@/services/cartService";
 import { create } from "zustand";
-
-interface CartItem {
-  menuItem: MenuItem;
-  quantity: number;
-  _id: string;
-}
+import useAuthStore from "./authStore";
+import { CartItem } from "@/types/cart";
 
 interface CartState {
   items: CartItem[];
-  addItems: (item: CartItem) => void;
-  removeItems: (id: string) => void;
-  updateItems: (id: string, quantity: number) => void;
+  fetchCarts: (userId: string) => void;
+  addItem: (userId: string, menuItemId: string, quality: number) => void;
   clearCart: () => void;
+  getTotalPrice: () => number;
 }
 
-export const useCartStore = create<CartState>()((set) => ({
+export const useCartStore = create<CartState>()((set, get) => ({
   items: [],
-
-  addItems: (item: CartItem) =>
-    set((state) => ({ items: [...state.items, item] })),
-
-  removeItems: (id: string) =>
-    set((state) => ({ items: state.items.filter((item) => item._id !== id) })),
-
-  updateItems: (id: string, quantity: number) =>
-    set((state) => ({
-      items: state.items.map((item) =>
-        item._id === id ? { ...item, quantity } : item
-      ),
-    })),
-
+  fetchCarts: async (userId) => {
+    const accessToken = useAuthStore.getState().accessToken as string;
+    console.log({ userId, accessToken });
+    const response = await fetchCart(userId, accessToken);
+    set({ items: response });
+  },
+  // this include add, update, delete
+  addItem: async (userId: string, menuItemId: string, quality: number) => {
+    const accessToken = useAuthStore.getState().accessToken as string;
+    await updateCart(userId, accessToken, menuItemId, quality);
+    get().fetchCarts(userId);
+  },
   clearCart: () => set({ items: [] }),
+  getTotalPrice: () =>
+    // How reduce works: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
+    get().items.reduce(
+      (acc, item) => acc + item.menuItem.price * item.quantity,
+      0
+    ),
 }));

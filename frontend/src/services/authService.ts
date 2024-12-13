@@ -1,5 +1,4 @@
 import { User } from "@/types";
-import axios from "axios";
 import apiClient from "./apiClient";
 
 interface LoginResponse {

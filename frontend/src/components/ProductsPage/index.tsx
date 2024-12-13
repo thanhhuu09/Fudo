@@ -16,7 +16,6 @@ import { MenuItem } from "@/types";
 import ProductCard from "./ProductCard";
 
 export default function ProductsPage({ products }: { products: MenuItem[] }) {
-  console.log({ products });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [priceRange, setPriceRange] = useState([0, 20]);

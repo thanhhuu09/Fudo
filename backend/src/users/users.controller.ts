@@ -15,7 +15,7 @@ import { Roles } from 'src/auth/roles/roles.decorator';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get(':id')
+  @Get(':userId')
   @Roles(Role.Admin, Role.User)
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiResponse({
@@ -24,8 +24,8 @@ export class UsersController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @ApiBearerAuth()
-  async getById(@Param('id') id: string) {
-    return this.usersService.getById(id);
+  async getById(@Param('userId') userId: string) {
+    return this.usersService.getById(userId);
   }
 
   @Get()

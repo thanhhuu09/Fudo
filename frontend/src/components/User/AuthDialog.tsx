@@ -43,19 +43,17 @@ const AuthDialog = () => {
 
     if (isLogin) {
       try {
-        await login(email, password, rememberMe);
+        login(email, password, rememberMe);
         toast.success("Login successful");
       } catch (error) {
         console.error("Login failed", error);
       }
     } else {
-      // Implement registration logic here
       console.log("Registering");
     }
   };
 
   const handleGoogleAuth = () => {
-    // Implement Google authentication logic here
     console.log("Authenticating with Google");
   };
 

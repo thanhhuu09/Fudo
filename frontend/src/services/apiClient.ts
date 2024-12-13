@@ -6,3 +6,7 @@ const apiClient = axios.create({
 });
 
 export default apiClient;
+
+// How to use the apiClient
+// import apiClient from "@/services/apiClient";
+// post request: apiClient.post("/auth/login", { email, password });

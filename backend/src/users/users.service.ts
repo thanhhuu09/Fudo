@@ -29,26 +29,26 @@ export class UsersService {
   }
 
   async updateCart(userId: string, updateCartDto: UpdateCartDto) {
-    const user = await this.userModel.findById(userId);
+    const user = await this.userModel.findById(userId).select('cart');
     if (!user) throw new NotFoundException('User not found');
-
-    const menuItemId = new Types.ObjectId(updateCartDto.menuItemId); // Convert string to ObjectId
-
+    const menuItemObjectId = new Types.ObjectId(updateCartDto.menuItemId); // Convert string to ObjectId
     const existingCartItem = user.cart.find(
-      (item) => item.menuItem.toString() === menuItemId.toString(),
+      (item) => item.menuItem.toString() === menuItemObjectId.toString(),
     );
-
     if (existingCartItem) {
       if (updateCartDto.quantity > 0) {
+        // Update quantity if quantity is greater than 0
         existingCartItem.quantity = updateCartDto.quantity;
       } else {
+        // Remove item from cart if quantity is 0
         user.cart = user.cart.filter(
-          (item) => item.menuItem.toString() !== menuItemId.toString(),
+          (item) => item.menuItem.toString() !== menuItemObjectId.toString(),
         );
       }
     } else if (updateCartDto.quantity > 0) {
+      // Add item to cart if quantity is greater than 0 and item is not in cart
       user.cart.push({
-        menuItem: menuItemId,
+        menuItem: menuItemObjectId,
         quantity: updateCartDto.quantity,
       });
     }
