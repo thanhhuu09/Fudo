@@ -49,8 +49,8 @@ export class User extends Document {
   @Prop({ default: 'Active' })
   accountStatus: string;
 
-  @Prop({ default: '' })
-  refreshToken: string;
+  @Prop({ default: [] })
+  refreshTokens: string[];
 
   @Prop({ default: Date.now })
   createdAt: Date;

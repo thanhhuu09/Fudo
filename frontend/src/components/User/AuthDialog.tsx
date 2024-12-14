@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FcGoogle } from "react-icons/fc";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
 import useAuthStore from "@/store/authStore";
 
 const AuthDialog = () => {
@@ -25,11 +24,14 @@ const AuthDialog = () => {
   const [isShowPassword, setIsShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [verifyPassword, setVerifyPassword] = useState("");
   const [name, setName] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
   const login = useAuthStore((state) => state.login);
+  const register = useAuthStore((state) => state.register);
+
   const handleSubmit = async () => {
     if (!email || !password) {
       setError("Email and password are required");
@@ -41,15 +43,21 @@ const AuthDialog = () => {
       return;
     }
 
-    if (isLogin) {
-      try {
-        login(email, password, rememberMe);
-        toast.success("Login successful");
-      } catch (error) {
-        console.error("Login failed", error);
+    try {
+      if (isLogin) {
+        await login(email, password, rememberMe);
+        resetForm();
+      } else {
+        await register(name, email, password);
+        resetForm();
       }
-    } else {
-      console.log("Registering");
+      setOpen(false);
+    } catch {
+      if (isLogin) {
+        setError("Invalid email or password");
+      } else {
+        setError("User already exists");
+      }
     }
   };
 
@@ -63,6 +71,23 @@ const AuthDialog = () => {
     setEmail("");
     setPassword("");
     setName("");
+  };
+
+  const resetForm = () => {
+    setError("");
+    setEmail("");
+    setPassword("");
+    setVerifyPassword("");
+    setName("");
+  };
+
+  const handleVerifyPassword = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVerifyPassword(e.target.value);
+    if (password !== e.target.value) {
+      setError("Passwords do not match");
+    } else {
+      setError("");
+    }
   };
 
   return (
@@ -158,17 +183,32 @@ const AuthDialog = () => {
                 </Button>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <div>
-                <input
-                  type="checkbox"
-                  id="rememberMe"
-                  checked={rememberMe}
-                  onChange={() => setRememberMe(!rememberMe)}
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="verifyPassword">Verify Password</Label>
+                <Input
+                  id="verifyPassword"
+                  type="password"
+                  placeholder="Re-enter your password"
+                  value={verifyPassword}
+                  onChange={handleVerifyPassword}
+                  required
                 />
               </div>
-              <Label htmlFor="rememberMe">Remember me</Label>
-            </div>
+            )}
+            {isLogin && (
+              <div className="flex items-center space-x-2">
+                <div>
+                  <input
+                    type="checkbox"
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onChange={() => setRememberMe(!rememberMe)}
+                  />
+                </div>
+                <Label htmlFor="rememberMe">Remember me</Label>
+              </div>
+            )}
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>

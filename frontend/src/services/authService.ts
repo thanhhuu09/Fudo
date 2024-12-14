@@ -11,7 +11,7 @@ interface RefreshResponse {
 }
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export const login = async (
+export const loginAPI = async (
   email: string,
   password: string,
   rememberMe: boolean
@@ -32,11 +32,30 @@ export const login = async (
   }
 };
 
-export const logout = async () => {
+export const logoutAPI = async () => {
   try {
     await apiClient.post(`${API_URL}/auth/logout`);
   } catch (error) {
     console.log("Logout Failed", error);
+    throw error;
+  }
+};
+
+export const registerAPI = async (
+  name: string,
+  email: string,
+  password: string
+) => {
+  try {
+    const response = await apiClient.post<User>(`${API_URL}/auth/register`, {
+      name,
+      email,
+      password,
+    });
+    console.log("Register Success", response.data);
+    return response.data;
+  } catch (error) {
+    console.log("Register Failed", error);
     throw error;
   }
 };

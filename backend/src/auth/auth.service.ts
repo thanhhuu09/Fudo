@@ -97,7 +97,7 @@ export class AuthService {
     const accessToken = this.generateAccessToken(user);
     const refreshToken = this.generateRefreshToken(user);
     if (loginAttempt.rememberMe) {
-      user.refreshToken = refreshToken;
+      user.refreshTokens.push(refreshToken);
       await user.save();
     }
     const userDto = plainToInstance(UserResponseDto, user.toJSON());
@@ -116,7 +116,7 @@ export class AuthService {
       });
       const user = await this.userModel.findOne({
         _id: payload.sub,
-        refreshToken,
+        refreshTokens: refreshToken,
       });
       if (!user) {
         throw new UnauthorizedException(

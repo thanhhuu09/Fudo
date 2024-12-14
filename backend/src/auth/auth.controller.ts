@@ -84,7 +84,8 @@ export class AuthController {
     const user = await this.authService.validateRefreshToken(refreshToken);
     const accessToken = this.authService.generateAccessToken(user);
     const newRefreshToken = this.authService.generateRefreshToken(user);
-    user.refreshToken = newRefreshToken;
+    user.refreshTokens = user.refreshTokens.filter((t) => t !== refreshToken); // remove old refresh token
+    user.refreshTokens.push(newRefreshToken); // add new refresh token
     await user.save();
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
@@ -106,11 +107,9 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
   async logout(@Res() res: Response, @Req() req: Request) {
     const refreshToken = req.cookies['refreshToken'];
-    console.log('refreshToken', refreshToken);
-
     if (refreshToken) {
       const user = await this.authService.validateRefreshToken(refreshToken);
-      user.refreshToken = '';
+      user.refreshTokens = user.refreshTokens.filter((t) => t !== refreshToken);
       await user.save();
     }
     res.clearCookie('refreshToken');
