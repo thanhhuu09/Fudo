@@ -5,22 +5,20 @@ import { OrderForm } from "@/components/Order/OrderForm";
 import { ProductList } from "@/components/Order/ProductList";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cartStore";
-import { createOrder } from "@/services/orderService";
-import { Order } from "@/types";
 import useAuthStore from "@/store/authStore";
 
 export default function OrderPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Giữ lại để dùng trong UI
   const [orderPlaced, setOrderPlaced] = useState(false);
   const { items } = useCartStore();
-  const { accessToken, user } = useAuthStore((state) => state);
+  const { accessToken } = useAuthStore((state) => state);
 
-  const handleSubmit = async (
-    event: React.FormEvent<HTMLFormElement>,
-    orderData: Order
-  ) => {
-    event.preventDefault();
-    // console.log("Order submitted:", { ...data, products: items });
+  const handleSubmit = async (orderData: {
+    name: string;
+    address: string;
+    phone: string;
+    paymentMethod: "credit_card" | "cod";
+  }) => {
     const order = {
       ...orderData,
       items: items.map((item) => ({
@@ -31,11 +29,10 @@ export default function OrderPage() {
     try {
       setIsLoading(true);
       console.log("Order created:", order);
-      // setOrderPlaced(true);
+      // Giả lập gửi request, nếu thành công thì setOrderPlaced(true)
+      setOrderPlaced(true); // Uncomment hoặc thay bằng logic thực tế (API call)
     } catch (error) {
       console.error("Error creating order:", error);
-      setIsLoading(false);
-      return;
     } finally {
       setIsLoading(false);
     }
@@ -51,10 +48,10 @@ export default function OrderPage() {
       <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg text-center">
         <h1 className="text-2xl font-bold mb-4">Order Placed Successfully!</h1>
         <p className="mb-4">
-          ${"Thank you for your order. We'll process it shortly."}
+          Thank you for your order. We&apos;ll process it shortly.
         </p>
-        <Button onClick={() => setOrderPlaced(false)}>
-          Place Another Order
+        <Button onClick={() => setOrderPlaced(false)} disabled={isLoading}>
+          {isLoading ? "Processing..." : "Place Another Order"}
         </Button>
       </div>
     );
@@ -82,6 +79,9 @@ export default function OrderPage() {
           </div>
         </div>
       </div>
+      {isLoading && (
+        <p className="text-center mt-4">Processing your order...</p>
+      )}
     </div>
   );
 }

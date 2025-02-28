@@ -46,7 +46,6 @@ export function OrderForm({
   onSubmit: (data: z.infer<typeof formSchema>) => void;
 }) {
   const { user, accessToken } = useAuthStore((state) => state);
-  const { handleSubmit } = useForm();
 
   const [addresses, setAddresses] = useState(user?.addresses || []);
   console.log("Addresses:", addresses);
