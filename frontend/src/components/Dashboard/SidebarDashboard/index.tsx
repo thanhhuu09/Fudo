@@ -23,6 +23,7 @@ import ProfileDropdown from "./ProfileDropdown";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import useAuthStore from "@/store/authStore";
+import { useRouter } from "next/navigation";
 
 interface SidebarDashboardItem {
   value: string;
@@ -71,9 +72,14 @@ const sidebarItems: SidebarDashboardItem[] = [
 ];
 
 const SidebarDashboard = () => {
+  const router = useRouter();
   const pathname = usePathname();
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
+  const { user, logout } = useAuthStore((state) => state);
+
+  const handleLogout = async () => {
+    logout();
+    router.push("/dashboard/login");
+  };
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b  p-4 bg-white">
@@ -132,7 +138,7 @@ const SidebarDashboard = () => {
             email={user.email}
             photo={user.photo}
             role={user.role}
-            onLogout={logout}
+            onLogout={handleLogout}
           />
         ) : null}
       </SidebarFooter>
