@@ -15,18 +15,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import Image from "next/image";
 import { toast } from "sonner";
 import axios from "axios";
 import { Category, MenuItemForm, MenuItem } from "@/types";
 import { NumericFormat } from "react-number-format";
+import { addMenu, updateMenu, uploadFile } from "@/services/menuServices";
+import useAuthStore from "@/store/authStore";
+import { AddNewCategory } from "./AddNewCategory";
 
 interface MenuItemModalProps {
   isOpen: boolean;
@@ -54,6 +51,8 @@ export default function MenuItemModal({
   const [visible, setVisible] = useState(true);
   const [imageURL, setImageURL] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const accessToken = useAuthStore((state) => state.accessToken);
 
   console.log("initialData", initialData);
   useEffect(() => {
@@ -104,43 +103,31 @@ export default function MenuItemModal({
 
     try {
       if (mode === "add") {
-        // Create new menu item
-        const response = await axios.post("/api/menu-items", data, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        if (accessToken === null) {
+          toast.error("Please log in to continue.");
+          return;
+        }
+        const response = await addMenu(data, accessToken);
+        if (response) {
+          if (imageURL instanceof File) {
+            const res = await uploadFile(imageURL, accessToken);
+            if (res) {
+              data.imageURL = res.imageUrl;
+              const menuItemUpdated = await updateMenu(
+                response._id,
+                data,
+                accessToken
+              );
+              console.log("menuItemUpdated", menuItemUpdated);
 
-        if (response.data.success) {
-          // Handle image upload for new item
-          if (imageURL) {
-            const formData = new FormData();
-            formData.append("file", imageURL);
-            const uploadResponse = await axios.post(
-              `${process.env.NEXT_PUBLIC_API_URL}/upload`,
-              formData,
-              {
-                headers: {
-                  "Content-Type": "multipart/form-data",
-                },
+              if (menuItemUpdated) {
+                toast.success("Menu item added successfully.");
+                onSave(menuItemUpdated);
+              } else {
+                toast.error("Failed to add menu item.");
               }
-            );
-
-            const imageUrl = uploadResponse.data.imageUrl;
-
-            // Update the menu item with the image URL
-            await axios.put(`/api/menu-items/${response.data.data._id}`, {
-              imageURL: imageUrl,
-            });
-
-            toast.success("Menu item created successfully with image.");
-          } else {
-            toast.success("Menu item created successfully.");
+            }
           }
-
-          onSave(response.data.data);
-        } else {
-          toast.error("Failed to create menu item.");
         }
       } else {
         // Update existing menu item
@@ -156,27 +143,22 @@ export default function MenuItemModal({
             {
               headers: {
                 "Content-Type": "multipart/form-data",
+                Authorization: `Bearer ${accessToken}`,
               },
             }
           );
-
           updatedData.imageURL = uploadResponse.data.imageUrl;
         }
 
         // Update the menu item
-        const response = await axios.put(
-          `/api/menu-items/${initialData?._id}`,
+        const response = await updateMenu(
+          initialData?._id as string,
           updatedData,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
+          accessToken as string
         );
-
-        if (response.data.success) {
+        if (response) {
           toast.success("Menu item updated successfully.");
-          onSave(response.data.data);
+          onSave(response);
         } else {
           toast.error("Failed to update menu item.");
         }
@@ -246,19 +228,11 @@ export default function MenuItemModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
-              <Select value={categoryID} onValueChange={setCategoryID}>
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories?.map((cat) => (
-                    <SelectItem key={cat._id} value={cat._id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <AddNewCategory
+                categories={categories}
+                onChange={(categoryID: string) => setCategoryID(categoryID)}
+                value={categoryID}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="price">Price *</Label>

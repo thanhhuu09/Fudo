@@ -9,6 +9,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { S3Service } from './s3.service';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiOperation,
@@ -16,12 +17,15 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { UploadFileDto } from './dto/upload-file.dto';
+import { Roles } from 'src/auth/roles/roles.decorator';
+import { Role } from 'src/common/enums/role.enum';
 
 @ApiTags('File Upload')
 @Controller('upload')
 export class UploadController {
   constructor(private readonly s3Service: S3Service) {}
 
+  @Roles(Role.Admin)
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Upload a file' })
@@ -31,6 +35,7 @@ export class UploadController {
     type: UploadFileDto,
   })
   @ApiResponse({ status: 201, description: 'File uploaded successfully' })
+  @ApiBearerAuth()
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
   ): Promise<{ imageUrl: string }> {
@@ -43,6 +48,7 @@ export class UploadController {
 
   // Update file
   // Endpoint: PUT /upload?oldImageUrl=oldImageUrl
+  @Roles(Role.Admin)
   @Put()
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Update a file' })
@@ -52,6 +58,7 @@ export class UploadController {
     type: UploadFileDto,
   })
   @ApiResponse({ status: 200, description: 'File updated successfully' })
+  @ApiBearerAuth()
   async updateFile(
     @UploadedFile() file: Express.Multer.File,
     @Query('oldImageUrl') oldImageUrl: string,

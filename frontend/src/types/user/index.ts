@@ -24,3 +24,11 @@ export interface AuthResponse {
     exp: number;
   };
 }
+
+export interface UpdateUserInfoDTO {
+  name?: string;
+  email?: string;
+  photo?: string;
+  addresses?: string[];
+  paymentMethods?: string[];
+}

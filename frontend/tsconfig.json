@@ -26,7 +26,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/components/Dashboard/SidebarDashboard"
+    "src/components/Dashboard/SidebarDashboard",
+    "src/types/order"
   ],
   "exclude": ["node_modules"]
 }

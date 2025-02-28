@@ -9,6 +9,7 @@ import {
 import { UpdateCartDto } from './dto/update-cart.dto';
 import { Role } from 'src/common/enums/role.enum';
 import { Roles } from 'src/auth/roles/roles.decorator';
+import { updateUserInfoDTO } from './dto/update-user.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -52,6 +53,23 @@ export class UsersController {
   @ApiBearerAuth()
   async findByEmail(@Param('email') email: string) {
     return this.usersService.findByEmail(email);
+  }
+  // update user's information
+  @Put(':userId')
+  @Roles(Role.Admin, Role.User)
+  @ApiOperation({ summary: 'Update user by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Update user by ID successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiBearerAuth()
+  async update(
+    @Param('userId') userId: string,
+    @Body() updateUserInfoDTO: Partial<updateUserInfoDTO>,
+  ) {
+    return this.usersService.updateUserInfo(userId, updateUserInfoDTO);
   }
 
   // Cart routes

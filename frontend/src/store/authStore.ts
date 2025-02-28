@@ -61,7 +61,6 @@ const useAuthStore = create<AuthState>()((set) => ({
       set({ user, accessToken: null });
       toast.success("Registration successful");
     } catch (error) {
-      console.log("Registration failed", error);
       throw error;
     }
   },

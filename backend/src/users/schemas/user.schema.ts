@@ -29,6 +29,9 @@ export class User extends Document {
     details: string;
   }[];
 
+  @Prop({ default: '' })
+  phoneNumber: string;
+
   @Prop({ type: [Types.ObjectId], ref: 'Order', default: [] })
   orderHistory: Types.ObjectId[];
 

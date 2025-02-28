@@ -3,6 +3,9 @@ import { User } from './schemas/user.schema';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { UpdateCartDto } from './dto/update-cart.dto';
+import { updateUserInfoDTO } from './dto/update-user.dto';
+import { plainToInstance } from 'class-transformer';
+import { UserDTO } from './dto/user.dto';
 
 @Injectable()
 export class UsersService {
@@ -64,5 +67,21 @@ export class UsersService {
     user.cart = [];
     await user.save();
     return user.cart;
+  }
+
+  async updateUserInfo(userId: string, user: Partial<updateUserInfoDTO>) {
+    console.log({ userId, user });
+
+    if (user.addresses) {
+      const existingUser = await this.userModel.findById(userId);
+      if (!existingUser) throw new NotFoundException('User not found');
+      existingUser.addresses = user.addresses;
+      await existingUser.save();
+      return plainToInstance(UserDTO, existingUser, {
+        excludeExtraneousValues: true,
+      });
+    } else {
+      await this.userModel.findByIdAndUpdate(userId, user, { new: true });
+    }
   }
 }

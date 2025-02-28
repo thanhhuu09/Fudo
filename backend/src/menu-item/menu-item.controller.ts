@@ -108,6 +108,8 @@ export class MenuItemController {
     @Param('id') id: string,
     @Body() updateMenuItemDto: UpdateMenuItemDto,
   ): Promise<MenuItem> {
+    console.log(id, updateMenuItemDto);
+
     return this.menuItemService.update(id, updateMenuItemDto);
   }
 

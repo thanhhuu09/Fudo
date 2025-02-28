@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FcGoogle } from "react-icons/fc";
 import { Separator } from "@/components/ui/separator";
 import useAuthStore from "@/store/authStore";
+import { AxiosError } from "axios";
 
 const AuthDialog = () => {
   const [open, setOpen] = useState(false);
@@ -52,11 +53,11 @@ const AuthDialog = () => {
         resetForm();
       }
       setOpen(false);
-    } catch {
-      if (isLogin) {
-        setError("Invalid email or password");
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        setError(error.response?.data.message);
       } else {
-        setError("User already exists");
+        setError("Something went wrong. Please try again later");
       }
     }
   };

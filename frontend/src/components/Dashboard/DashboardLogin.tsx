@@ -27,22 +27,23 @@ export default function DashboardLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
+  const loading = useAuthStore((state) => state.loading);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
+    if (!email || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
 
     try {
       await login(email, password, rememberMe);
       router.push("/dashboard");
     } catch {
       setError("Invalid email or password. Please try again.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -198,9 +199,9 @@ export default function DashboardLogin() {
                 <Button
                   type="submit"
                   className="w-full bg-[#FF9F29] hover:bg-[#FF9F29]/90 text-white font-semibold"
-                  disabled={isLoading}
+                  disabled={loading}
                 >
-                  {isLoading ? (
+                  {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Logging in...

@@ -38,6 +38,13 @@ import { Category, MenuItem } from "@/types";
 import axios from "axios";
 import { formatNumber } from "@/lib/formatNumber";
 import { DeleteAlertDialog } from "@/components/DeleteAlertDialog";
+import {
+  deleteMenu,
+  fetchCategories,
+  fetchMenu,
+} from "@/services/menuServices";
+import useAuthStore from "@/store/authStore";
+import { toast } from "sonner";
 
 export default function ManageMenuItems() {
   const [isLoading, setIsLoading] = useState(true);
@@ -52,27 +59,14 @@ export default function ManageMenuItems() {
   const [selectedItemsID, setSelectedItemsID] = useState<string[]>([]); // Array of selected item IDs
 
   const searchRef = useRef<HTMLDivElement>(null);
+  const accessToken = useAuthStore((state) => state.accessToken);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [menuItemsResponse, categoriesResponse] = await Promise.all([
-          fetch("/api/menu-items"),
-          fetch("/api/categories"),
-        ]);
-        const [menuItemsData, categoriesData] = await Promise.all([
-          menuItemsResponse.json(),
-          categoriesResponse.json(),
-        ]);
-        setMenuItems(menuItemsData);
-        setCategories(categoriesData);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    }
-
-    fetchData();
+    fetchCategories().then((res) => setCategories(res));
+    fetchMenu().then((res) => {
+      setMenuItems(res);
+      setIsLoading(false);
+    });
   }, []);
   const filteredItems = menuItems.filter(
     (menuItem) =>
@@ -96,6 +90,13 @@ export default function ManageMenuItems() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Get new list when CRUD operation is done
+  useEffect(() => {
+    fetchMenu().then((res) => {
+      setMenuItems(res);
+    });
+  }, [isModalOpen]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -136,17 +137,26 @@ export default function ManageMenuItems() {
   };
 
   const handleDeleteItem = async (_id: string) => {
+    if (!accessToken) {
+      return;
+    }
     try {
-      const response = await fetch(`/api/menu-items/${_id}`, {
-        method: "DELETE",
-      });
-      if (response.status === 200) {
+      const res = await deleteMenu(_id, accessToken);
+      if (res) {
         setMenuItems((prev) => prev.filter((item) => item._id !== _id));
-      } else {
-        console.error("Error response from Next.js API:", response);
+        toast.success("Menu item deleted successfully");
       }
     } catch (error) {
-      console.error("Error caught in Next.js API route:", error);
+      // Nếu lỗi là một AxiosError, hiển thị thông báo lỗi
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          toast.error("You are not authorized to delete this item");
+        } else {
+          toast.error("An error occurred. Please try again later");
+        }
+      } else {
+        console.error("Error deleting menu item:", error);
+      }
     }
   };
 

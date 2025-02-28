@@ -17,6 +17,7 @@ import { formatNumber } from "@/lib/formatNumber";
 import { useCartStore } from "@/store/cartStore";
 import useAuthStore from "@/store/authStore";
 import { toast } from "sonner";
+import Link from "next/link";
 
 const Cart = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,8 +26,6 @@ const Cart = () => {
   const items = useCartStore((state) => state.items);
   const updateQuality = useCartStore((state) => state.addItem);
   const fetchCarts = useCartStore((state) => state.fetchCarts);
-
-  console.log({ items });
 
   const handleUpdateQuality = async (menuItemId: string, quantity: number) => {
     if (!user) {
@@ -183,9 +182,11 @@ const Cart = () => {
                 )}
               </span>
             </div>
-            <Button className="w-full bg-[#FFCB45] hover:bg-[#FFB800] text-black">
-              Proceed to Checkout
-            </Button>
+            <Link href="/order">
+              <Button className="w-full bg-[#FFCB45] hover:bg-[#FFB800] text-black">
+                Proceed to Checkout
+              </Button>
+            </Link>
           </div>
         </SheetFooter>
       </SheetContent>

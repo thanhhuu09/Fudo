@@ -12,6 +12,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './auth/roles/roles.guard';
 import { JwtModule } from '@nestjs/jwt';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { JwtModule } from '@nestjs/jwt';
     MenuItemModule,
     CategoryModule,
     UploadModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [

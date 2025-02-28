@@ -46,9 +46,17 @@ export class MenuItemService {
     id: string,
     updateMenuItemDto: UpdateMenuItemDto,
   ): Promise<MenuItem> {
-    return this.menuItemModel.findByIdAndUpdate(id, updateMenuItemDto, {
-      new: true,
-    });
+    console.log('id', id);
+
+    const updatedMenuItem = await this.menuItemModel.findByIdAndUpdate(
+      id,
+      updateMenuItemDto,
+      { new: true },
+    );
+    if (!updatedMenuItem) {
+      throw new NotFoundException(`Menu item with ID ${id} not found`);
+    }
+    return updatedMenuItem;
   }
 
   async remove(id: string): Promise<MenuItem> {
@@ -58,8 +66,6 @@ export class MenuItemService {
     }
     if (deletedMenuItem.imageURL) {
       await this.s3Service.deleteFile(deletedMenuItem.imageURL);
-    } else {
-      throw new Error('Image URL not found');
     }
 
     return deletedMenuItem;

@@ -51,7 +51,9 @@ export class S3Service {
     oldImageURL: string,
     newFile: Express.Multer.File,
   ): Promise<string> {
-    await this.deleteFile(oldImageURL);
+    if (oldImageURL) {
+      await this.deleteFile(oldImageURL);
+    }
     return this.uploadFile(newFile);
   }
 }
