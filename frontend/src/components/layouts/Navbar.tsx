@@ -51,8 +51,8 @@ const Navbar = () => {
   ];
   const activeStyle =
     "text-black font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[3px] after:bg-[#FFAC4B] after:rounded-sm transition-all duration-300 ease-in-out";
-  const accessToken = useAuthStore((state) => state.accessToken);
-  const user = useAuthStore((state) => state.user);
+  const accessToken = useAuthStore().accessToken; // get latest access token
+  const user = useAuthStore().user; // get latest user
 
   return (
     <nav className="bg-[#fff9ef] relative">

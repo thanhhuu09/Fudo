@@ -61,9 +61,8 @@ const AuthDialog = () => {
       }
     }
   };
-
   const handleGoogleAuth = () => {
-    console.log("Authenticating with Google");
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   };
 
   const toggleAuthMode = () => {
@@ -117,7 +116,7 @@ const AuthDialog = () => {
           <Button
             variant="outline"
             className="w-full"
-            onClick={handleGoogleAuth}
+            onClick={handleGoogleAuth as () => void}
           >
             <FcGoogle className="mr-2 h-5 w-5" />
             {isLogin ? "Login with Google" : "Register with Google"}

@@ -40,6 +40,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
     set({ isLoading: true }); // 🔥 Đặt trạng thái loading trước khi gọi API
     try {
       const accessToken = useAuthStore.getState().accessToken as string;
+
       await updateCart(userId, accessToken, menuItemId, quality);
       await get().fetchCarts(userId); // 🔥 Sau khi cập nhật xong, fetch lại cart
     } finally {

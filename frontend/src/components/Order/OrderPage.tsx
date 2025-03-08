@@ -15,12 +15,13 @@ export default function OrderPage() {
 
   const handleSubmit = async (orderData: {
     name: string;
-    address: string;
+    selectedAddressId: string;
     phone: string;
     paymentMethod: "credit_card" | "cod";
   }) => {
     const order = {
       ...orderData,
+      address: orderData.selectedAddressId, // Map selectedAddressId to address
       items: items.map((item) => ({
         menuItem: item.menuItem._id,
         quantity: item.quantity,
@@ -58,7 +59,7 @@ export default function OrderPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
+    <div className="max-w-5xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
       <h1 className="text-2xl font-bold mb-6">Complete Your Order</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>

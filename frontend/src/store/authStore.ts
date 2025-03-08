@@ -17,6 +17,7 @@ interface AuthState {
   logout: () => void;
   register: (name: string, email: string, password: string) => void;
   initialize: () => void;
+  loginWithGoogle: (token: string, user: User) => void;
 }
 const useAuthStore = create<AuthState>()((set) => ({
   user: null,
@@ -27,10 +28,18 @@ const useAuthStore = create<AuthState>()((set) => ({
       const accessToken = await refreshToken();
       if (accessToken) {
         const userProfile = await fetchUserProfile(accessToken);
+        console.log("userProfile", userProfile);
+
         set({
           user: userProfile,
           accessToken,
           loading: false,
+        });
+      } else {
+        set({
+          loading: false,
+          accessToken: null,
+          user: null,
         });
       }
     } catch {
@@ -41,7 +50,12 @@ const useAuthStore = create<AuthState>()((set) => ({
       });
     }
   },
+  loginWithGoogle: async (token: string, user: User) => {
+    set({ user, accessToken: token });
+    toast.success("Login with Google successful");
+  },
   login: async (email: string, password: string, rememberMe: boolean) => {
+    set({ loading: true });
     try {
       const { user, accessToken } = await loginAPI(email, password, rememberMe);
       set({ user, accessToken, loading: false });
@@ -49,6 +63,8 @@ const useAuthStore = create<AuthState>()((set) => ({
     } catch (error) {
       console.log("Login failed", error);
       throw error;
+    } finally {
+      set({ loading: false });
     }
   },
   logout: async () => {

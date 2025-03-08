@@ -7,8 +7,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "../../ui/dropdown-menu";
-import { Users, Settings, LogOut } from "lucide-react";
+import { Users, Settings, LogOut, StoreIcon } from "lucide-react";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
+import Link from "next/link";
 
 interface ProfileDropdownProps {
   name: string;
@@ -62,6 +63,12 @@ export default function ProfileDropdown({
         <DropdownMenuItem>
           <Settings className="mr-2 h-4 w-4" />
           Settings
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/">
+            <StoreIcon className="mr-2 h-4 w-4" />
+            Back to the store
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

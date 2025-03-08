@@ -25,12 +25,13 @@ export class GoogleAuthStrategy extends PassportStrategy(
     done: VerifiedCallback,
   ): Promise<any> {
     // Extract user information from Google profile
-    const { emails, name, photos } = profile;
+    const { sub, email, given_name, family_name, picture } = profile._json;
     const user = {
-      email: emails[0].value,
-      photo: photos[0].value,
-      firstName: name.givenName,
-      lastName: name.familyName,
+      googleId: sub,
+      email: email,
+      photo: picture,
+      firstName: given_name,
+      lastName: family_name,
       accessToken,
     };
 

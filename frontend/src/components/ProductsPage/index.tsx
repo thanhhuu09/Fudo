@@ -33,7 +33,8 @@ export default function ProductsPage({ products }: { products: MenuItem[] }) {
     .filter(
       (product) =>
         product.price >= priceRange[0] && product.price <= priceRange[1]
-    );
+    )
+    .filter((product) => product.visible);
   // .sort((a, b) => {
   //   if (sortBy == "name") return a.name.localeCompare(b.name);
   //   if (sortBy === "price") return a.price - b.price;

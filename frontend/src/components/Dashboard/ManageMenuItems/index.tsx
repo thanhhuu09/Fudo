@@ -42,6 +42,7 @@ import {
   deleteMenu,
   fetchCategories,
   fetchMenu,
+  updateMenu,
 } from "@/services/menuServices";
 import useAuthStore from "@/store/authStore";
 import { toast } from "sonner";
@@ -91,6 +92,13 @@ export default function ManageMenuItems() {
     };
   }, []);
 
+  const checkAuth = () => {
+    if (!accessToken) {
+      toast.error("You need to be logged in to perform this action");
+      return false;
+    }
+    return true;
+  };
   // Get new list when CRUD operation is done
   useEffect(() => {
     fetchMenu().then((res) => {
@@ -161,17 +169,20 @@ export default function ManageMenuItems() {
   };
 
   const handleAvailabilityToggle = async (_id: string) => {
-    const res = await axios.put(`/api/menu-items/${_id}`, {
-      visible: !menuItems.find((item) => item._id === _id)?.visible,
-    });
-    if (res.data.success) {
+    const data = await updateMenu(
+      _id,
+      { visible: !menuItems.find((item) => item._id === _id)?.visible },
+      accessToken as string
+    );
+
+    if (data) {
       setMenuItems((prev) =>
         prev.map((item) =>
           item._id === _id ? { ...item, visible: !item.visible } : item
         )
       );
     } else {
-      console.error("Error updating item visibility:", res);
+      console.error("Error updating item visibility:", data);
     }
   };
   const handleAddItem = () => {
@@ -411,7 +422,9 @@ export default function ManageMenuItems() {
                     <span className="text-sm">Visible</span>
                     <Switch
                       checked={item.visible}
-                      onCheckedChange={() => handleAvailabilityToggle(item._id)}
+                      onCheckedChange={() =>
+                        checkAuth() && handleAvailabilityToggle(item._id)
+                      }
                     />
                   </div>
                   <div>

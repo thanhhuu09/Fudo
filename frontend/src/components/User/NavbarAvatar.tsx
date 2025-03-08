@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { User as UserT } from "@/types";
 import useAuthStore from "@/store/authStore";
+import { DashboardIcon } from "@radix-ui/react-icons";
 
 interface NavbarAvatarProps {
   user: UserT;
@@ -60,6 +61,13 @@ export default function NavbarAvatar({ user }: NavbarAvatarProps) {
           <Link href="/settings" className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
+          </Link>
+        </DropdownMenuItem>
+        {/* Dashboard */}
+        <DropdownMenuItem asChild>
+          <Link href="/dashboard" className="cursor-pointer">
+            <DashboardIcon className="mr-2 h-4 w-4" />
+            <span>Dashboard</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

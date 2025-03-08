@@ -14,7 +14,6 @@ export const decodeToken = (accessToken: string) => {
   }
   try {
     const decodedToken: DecodedToken = jwtDecode<DecodedToken>(accessToken);
-    console.log("Decoded token", decodedToken);
     return decodedToken;
   } catch (error) {
     console.error("Error decoding token", error);

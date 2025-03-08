@@ -5,14 +5,21 @@ import axios from "axios";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const fetchUserProfile = async (accessToken: string) => {
+  console.log("accessToken", accessToken);
+
   const decodedToken = decodeToken(accessToken);
   const userId = decodedToken?.sub;
+  if (!userId) {
+    throw new Error("Invalid token");
+  }
   try {
     const response = await axios.get(`${API_URL}/users/${userId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
+    console.log("response", response.data);
+
     return response.data;
   } catch (error) {
     console.error("Error fetching user profile:", error);

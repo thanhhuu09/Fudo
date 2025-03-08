@@ -4,9 +4,27 @@ import { Document, Types } from 'mongoose';
 import { Role } from 'src/common/enums/role.enum';
 
 @Schema()
+class Address {
+  @Prop()
+  street: string;
+
+  @Prop()
+  city: string;
+
+  @Prop()
+  country: string;
+
+  @Prop()
+  zipCode: string;
+}
+
+@Schema()
 export class User extends Document {
   @Prop({ required: true, default: Role.User, enum: Role })
   role: string;
+
+  @Prop({ required: false, unique: true })
+  googleId: string;
 
   @Prop({ required: true })
   name: string;
@@ -17,13 +35,16 @@ export class User extends Document {
   @Prop({ default: '' })
   photo: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   passwordHash: string;
 
-  @Prop({ default: [] })
-  addresses: string[];
+  @Prop({ type: [Address] })
+  addresses: Address[];
 
-  @Prop({ type: [{ Object }], default: [] })
+  @Prop({
+    type: [{ type: String, details: String }],
+    default: [],
+  })
   paymentMethods: {
     type: string;
     details: string;
@@ -54,6 +75,9 @@ export class User extends Document {
 
   @Prop({ default: [] })
   refreshTokens: string[];
+
+  @Prop({ default: true })
+  rememberMe: boolean;
 
   @Prop({ default: Date.now })
   createdAt: Date;

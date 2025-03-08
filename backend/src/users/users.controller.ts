@@ -10,6 +10,7 @@ import { UpdateCartDto } from './dto/update-cart.dto';
 import { Role } from 'src/common/enums/role.enum';
 import { Roles } from 'src/auth/roles/roles.decorator';
 import { updateUserInfoDTO } from './dto/update-user.dto';
+import { Public } from 'src/auth/roles/public.decorator';
 
 @ApiTags('users')
 @Controller('users')
@@ -30,7 +31,8 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(Role.Admin)
+  @Public()
+  // @Roles(Role.Admin)
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({
     status: 200,

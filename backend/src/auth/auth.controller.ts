@@ -10,16 +10,20 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { Request, Response } from 'express';
 import { Public } from './roles/public.decorator';
-import { AuthGuard } from '@nestjs/passport';
+import { GoogleAuthGuard } from './strategies/google-auth.guard';
+import { UsersService } from 'src/users/users.service';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ) {}
 
   @Public()
   @Post('register')
@@ -81,18 +85,29 @@ export class AuthController {
     if (!refreshToken) {
       throw new UnauthorizedException('No refresh token provided');
     }
+
     const user = await this.authService.validateRefreshToken(refreshToken);
+    if (!user) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
     const accessToken = this.authService.generateAccessToken(user);
     const newRefreshToken = this.authService.generateRefreshToken(user);
-    user.refreshTokens = user.refreshTokens.filter((t) => t !== refreshToken); // remove old refresh token
-    user.refreshTokens.push(newRefreshToken); // add new refresh token
-    await user.save();
-    res.cookie('refreshToken', newRefreshToken, {
+
+    if (!user.refreshTokens) {
+      user.refreshTokens = [];
+    }
+    user.refreshTokens = user.refreshTokens.filter((t) => t !== refreshToken); // Remove old token
+    user.refreshTokens.push(newRefreshToken); // Add new token
+
+    await this.usersService.updateRefreshTokens(user.id, user.refreshTokens);
+    await res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
+
     return res.status(200).send({ accessToken });
   }
 
@@ -115,16 +130,34 @@ export class AuthController {
     res.clearCookie('refreshToken');
     return res.status(200).send('Logged out successfully');
   }
-
-  @UseGuards(AuthGuard('google'))
+  // "/auth/google → Chuyển hướng sang trang đăng nhập của Google"
+  @Public()
+  @UseGuards(GoogleAuthGuard)
   @Get('google')
-  async googleAuth(@Req() req) {
-    return req;
+  googleAuth() {
+    // Google Auth Guar d will redirect to Google login page
   }
 
-  @UseGuards(AuthGuard('google'))
+  // "/auth/google/callback → Google xác thực thành công → Gọi service để xử lý"
+  @Public()
+  @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
-  googleAuthRedirect(@Req() req) {
-    return this.authService.googleLogin(req);
+  async googleAuthRedirect(@Req() req, @Res() res: Response) {
+    const { access_token, user, refreshToken } =
+      await this.authService.googleLogin(req.user);
+
+    // Set refresh token to cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    // encodeURIComponent giúp đảm bảo user object được truyền qua URL an toàn. Log ra sẽ thấy nó được encode
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/login-success?token=${access_token}&user=${encodeURIComponent(
+        JSON.stringify(user),
+      )}`,
+    );
   }
 }

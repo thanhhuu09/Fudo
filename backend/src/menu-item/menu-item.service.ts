@@ -39,6 +39,7 @@ export class MenuItemService {
   async findByCategory(category: string): Promise<MenuItem[]> {
     return this.menuItemModel.find({
       category,
+      visible: true,
     });
   }
 

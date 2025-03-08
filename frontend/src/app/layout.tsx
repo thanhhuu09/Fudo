@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import AuthProvider from "@/store/AuthProvider";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 // Load Inter font from Google
 const inter = Inter({
@@ -29,8 +30,12 @@ export default function RootLayout({
          flex min-h-screen flex-col 
         `}
       >
-        <AuthProvider>{children}</AuthProvider>
-        <Toaster />
+        <GoogleOAuthProvider
+          clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string}
+        >
+          <AuthProvider>{children}</AuthProvider>
+          <Toaster />
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

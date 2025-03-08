@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  Req,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -9,10 +8,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from 'src/users/schemas/user.schema';
 import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { ConfigService } from '@nestjs/config';
-import { UserResponseDto } from './dto/user-response.dto';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 import { plainToInstance } from 'class-transformer';
 
 @Injectable()
@@ -96,10 +95,8 @@ export class AuthService {
     }
     const accessToken = this.generateAccessToken(user);
     const refreshToken = this.generateRefreshToken(user);
-    if (loginAttempt.rememberMe) {
-      user.refreshTokens.push(refreshToken);
-      await user.save();
-    }
+    user.refreshTokens.push(refreshToken);
+    await user.save();
     const userDto = plainToInstance(UserResponseDto, user.toJSON());
 
     return { accessToken, refreshToken, user: userDto };
@@ -130,27 +127,58 @@ export class AuthService {
   }
 
   // Google OAuth2.
-  async googleLogin(@Req() req): Promise<{ access_token: string }> {
-    if (!req.user) {
+  async googleLogin(user: {
+    googleId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    photo: string;
+  }): Promise<{
+    access_token: string;
+    user: UserResponseDto;
+    refreshToken: string;
+  }> {
+    if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const { email, firstName, lastName, photo } = req.user;
 
-    const existingUser = await this.userModel.findOne({ email });
+    // Find the user in the database.
+    let existingUser = await this.userModel.findOne({
+      $or: [
+        {
+          email: user.email,
+        },
+        { googleId: user.googleId },
+      ],
+    });
     if (!existingUser) {
-      const newUser = new this.userModel({
-        name: `${firstName} ${lastName}`,
-        email,
-        photo,
+      existingUser = new this.userModel({
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        photo: user.photo,
+        googleId: user.googleId,
       });
-      await newUser.save();
+      await existingUser.save();
+    } else if (!existingUser.googleId) {
+      // Nếu user có email nhưng chưa có Google ID, cập nhật nó.
+      existingUser.googleId = user.googleId;
+      await existingUser.save();
     }
 
     // Generate my own JWT token.
-    const payload = { email, sub: existingUser._id };
+    const payload = { email: existingUser.email, sub: existingUser._id };
     const access_token = this.jwtService.sign(payload);
+
+    if (!existingUser.refreshTokens) {
+      existingUser.refreshTokens = [];
+    }
+    const refreshToken = this.generateRefreshToken(existingUser);
+    existingUser.refreshTokens.push(refreshToken);
+    await existingUser.save();
     return {
       access_token,
+      user: plainToInstance(UserResponseDto, existingUser.toJSON()),
+      refreshToken: refreshToken,
     };
   }
 }

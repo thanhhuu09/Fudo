@@ -22,14 +22,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import useAuthStore from "@/store/authStore";
 
 export default function DashboardLogin() {
+  const { login, loading } = useAuthStore((state) => state);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const login = useAuthStore((state) => state.login);
-  const loading = useAuthStore((state) => state.loading);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +40,14 @@ export default function DashboardLogin() {
 
     try {
       await login(email, password, rememberMe);
-      router.push("/dashboard");
+      const getNewestAccessToken = useAuthStore.getState().accessToken;
+      if (getNewestAccessToken) {
+        console.log("Login successful, redirecting...");
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        setError("Invalid email or password. Please try again.");
+      }
     } catch {
       setError("Invalid email or password. Please try again.");
     }

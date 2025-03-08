@@ -9,10 +9,14 @@ import { useCartStore } from "@/store/cartStore";
 
 const ProductCard = ({ product }: { product: MenuItem }) => {
   const user = useAuthStore((state) => state.user);
+  console.log("user", user);
+
   const addToCart = useCartStore((state) => state.addItem);
   const items = useCartStore((state) => state.items);
 
   const handleAddToCart = async (userId: string) => {
+    console.log("userID", userId);
+
     if (!user) {
       toast.error("Please login to add to cart");
       return;

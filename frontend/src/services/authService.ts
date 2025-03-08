@@ -72,3 +72,18 @@ export const refreshToken = async () => {
     throw error;
   }
 };
+
+// Sign In With Google
+// export const signInWithGoogle = async () => {
+//   try {A
+//     const response = await apiClient.post(
+//       `${API_URL}/auth/google`, {
+
+//       }
+//     );
+//     return response.data;
+//   } catch (error) {
+//     console.log("Google Sign In Failed", error);
+//     throw error;
+//   }
+// };

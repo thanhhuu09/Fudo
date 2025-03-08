@@ -6,21 +6,30 @@ import { UpdateCartDto } from './dto/update-cart.dto';
 import { updateUserInfoDTO } from './dto/update-user.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserDTO } from './dto/user.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({ email });
+  async findByEmail(email: string): Promise<UserResponseDto | null> {
+    const user = await this.userModel.findOne({ email });
+    if (!user) return null;
+    return plainToInstance(UserResponseDto, user.toJSON());
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userModel.find();
+  async findAll(): Promise<UserResponseDto[]> {
+    const users = await this.userModel.find();
+    const usersDTO = users.map((user) =>
+      plainToInstance(UserResponseDto, user.toJSON()),
+    );
+    return usersDTO;
   }
 
-  async getById(id: string): Promise<User> {
-    return this.userModel.findById(id);
+  async getById(id: string): Promise<UserResponseDto> {
+    const user = await this.userModel.findById(id);
+    if (!user) throw new NotFoundException('User not found');
+    return plainToInstance(UserResponseDto, user.toJSON());
   }
 
   async getCart(userId: string) {
@@ -75,13 +84,25 @@ export class UsersService {
     if (user.addresses) {
       const existingUser = await this.userModel.findById(userId);
       if (!existingUser) throw new NotFoundException('User not found');
-      existingUser.addresses = user.addresses;
+
+      if (user.addresses) {
+        existingUser.addresses = user.addresses;
+      }
+
+      Object.assign(existingUser, user); // Update other fields. For example: name, email, phoneNumber, etc.
       await existingUser.save();
-      return plainToInstance(UserDTO, existingUser, {
-        excludeExtraneousValues: true,
-      });
-    } else {
-      await this.userModel.findByIdAndUpdate(userId, user, { new: true });
+
+      return plainToInstance(UserDTO, existingUser.toJSON());
     }
+  }
+
+  async updateRefreshTokens(userId: string, newTokens: string[]) {
+    return this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { $set: { refreshTokens: newTokens } }, // Nếu không có $set, MongoDB có thể ghi đè toàn bộ document, gây mất dữ liệu khác.
+        { new: true },
+      )
+      .exec();
   }
 }

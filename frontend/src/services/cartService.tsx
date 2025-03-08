@@ -30,6 +30,7 @@ export const updateCart = async (
       menuItemId,
       quantity,
     };
+    console.log("userIDFromCart", userId);
     const response = await axios.put(
       `${API_URL}/users/${userId}/cart`,
       payload,

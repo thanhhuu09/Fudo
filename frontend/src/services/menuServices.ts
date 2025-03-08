@@ -29,7 +29,7 @@ export const fetchMenu = async () => {
 
 export const updateMenu = async (
   menuId: string,
-  menu: MenuItemForm,
+  menu: Partial<MenuItemForm>,
   accessToken: string
 ) => {
   try {
