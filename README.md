@@ -41,7 +41,7 @@ npm run dev
 
 # Chạy backend
 cd backend
-npm run start
+npm run start:dev
 ```
 
 ## Đóng góp
