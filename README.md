@@ -15,6 +15,11 @@ Fudo là một nền tảng đặt món ăn trực tuyến, giúp người dùng
 - **Frontend**: Next.js, TailwindCSS, Zustand, ShadCN.
 - **Backend**: NestJS, MongoDB, Stripe API, Google OAuth, JWT.
 
+## Demo
+- **Backend:** [https://fudo-ur7o.onrender.com](https://fudo-ur7o.onrender.com)
+- **Frontend:** [https://let-food-nu.vercel.app/](https://let-food-nu.vercel.app/)
+- **Swagger API Docs:** [https://fudo-ur7o.onrender.com/api/docs](https://fudo-ur7o.onrender.com/api/docs)
+
 ## Cài đặt và chạy project
 ### Yêu cầu
 - Node.js >= 16
