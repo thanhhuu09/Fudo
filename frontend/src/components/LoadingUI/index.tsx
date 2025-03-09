@@ -22,7 +22,8 @@ export default function LoadingUI() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          Loading...
+          We are using free hosting, please wait about 60 seconds for the server
+          to wake up.
         </motion.h2>
       </div>
     </div>

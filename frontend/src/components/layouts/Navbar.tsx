@@ -1,8 +1,7 @@
 "use client";
 
-import { Menu, Search, ShoppingCart, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Image from "next/image";
-import { Button } from "../ui/button";
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthDialog from "../User/AuthDialog";
@@ -57,19 +56,35 @@ const Navbar = () => {
   return (
     <nav className="bg-[#fff9ef] relative">
       <div className="flex justify-between items-center p-4">
-        <Link href="/">
-          <Image src="/images/logo.svg" alt="logo" width={150} height={150} />
-        </Link>
         {/* Hamburger menu button */}
-        <Button
-          className="md:hidden"
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </Button>
 
+        <div className="flex items-center  gap-4">
+          <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+
+          <Link href="/">
+            <div className="relative w-24 h-8 md:w-32 md:h-10 cursor-pointer">
+              <Image
+                src="/images/logo.svg"
+                alt="logo"
+                layout="fill"
+                objectFit="contain"
+              />
+            </div>
+          </Link>
+        </div>
+        {/* Mobile menu */}
+        {accessToken && user ? (
+          <div className="md:hidden flex gap-4 items-center">
+            <Cart />
+            <NavbarAvatar user={user} />
+          </div>
+        ) : (
+          <div className="md:hidden flex gap-4 items-center">
+            <AuthDialog />
+          </div>
+        )}
         {/* Desktop menu */}
         {pathname === "/" && (
           <ul className="hidden md:flex gap-4">
@@ -77,8 +92,9 @@ const Navbar = () => {
               <li
                 className={`relative ${
                   item.name === currentItem ? activeStyle : "text-[#615F5A]"
-                } transition-all duration-300
-              cursor-pointer hover:text-black tracking-wider text-lg`}
+                }
+               transition-colors duration-300 ease-in-out
+               cursor-pointer hover:text-black tracking-wider text-lg`}
                 key={item.name}
                 onClick={() => setCurrentItem(item.name)}
               >
@@ -102,7 +118,6 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile menu */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
@@ -117,37 +132,14 @@ const Navbar = () => {
                   <motion.li
                     key={index}
                     className={`${
-                      item.isActive ? activeStyle : "text-[#615F5A]"
+                      item.name === currentItem ? activeStyle : "text-[#615F5A]"
                     } cursor-pointer hover:text-black tracking-wider text-lg`}
+                    onClick={() => setCurrentItem(item.name)}
                   >
                     {item.name}
                   </motion.li>
                 ))}
               </ul>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-                className="flex flex-col gap-4 items-center mt-6"
-              >
-                <div className="flex gap-4 w-full justify-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="bg-white rounded-full shadow-md"
-                  >
-                    <Search className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="bg-white rounded-full shadow-md"
-                  >
-                    <ShoppingCart className="h-5 w-5" />
-                  </Button>
-                </div>
-                <AuthDialog />
-              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
